@@ -105,11 +105,11 @@ export function Navigation() {
                     }}
                     className={`flex items-center gap-3 px-3 py-3 rounded-md transition-colors flex-1 w-full ${
                       isActive 
-                        ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600' 
+                        ? 'bg-red-50 text-red-600 border-l-4 border-red-600' 
                         : 'hover:bg-gray-50'
                     } ${!isHovered ? 'justify-center' : ''}`}
                     style={{
-                      color: isActive ? '#2563eb' : 'var(--text-icons-base-second, #68727D)',
+                      color: isActive ? '#DC143C' : 'var(--text-icons-base-second, #68727D)',
                       fontFamily: 'Inter',
                       fontSize: '15px',
                       fontStyle: 'normal',
@@ -121,7 +121,7 @@ export function Navigation() {
                     <Icon 
                       className="h-5 w-5 flex-shrink-0" 
                       style={{
-                        color: isActive ? '#2563eb' : 'var(--text-icons-base-second, #68727D)'
+                        color: isActive ? '#DC143C' : 'var(--text-icons-base-second, #68727D)'
                       }}
                     />
                     {isHovered && <span>{item.name}</span>}
@@ -142,11 +142,11 @@ export function Navigation() {
                     onClick={handleLinkClick}
                     className={`flex items-center gap-3 px-3 py-3 rounded-md transition-colors flex-1 ${
                       isActive 
-                        ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600' 
+                        ? 'bg-red-50 text-red-600 border-l-4 border-red-600' 
                         : 'hover:bg-gray-50'
                     } ${!isHovered ? 'justify-center' : ''}`}
                     style={{
-                      color: isActive ? '#2563eb' : 'var(--text-icons-base-second, #68727D)',
+                      color: isActive ? '#DC143C' : 'var(--text-icons-base-second, #68727D)',
                       fontFamily: 'Inter',
                       fontSize: '15px',
                       fontStyle: 'normal',
@@ -158,7 +158,7 @@ export function Navigation() {
                     <Icon 
                       className="h-5 w-5 flex-shrink-0" 
                       style={{
-                        color: isActive ? '#2563eb' : 'var(--text-icons-base-second, #68727D)'
+                        color: isActive ? '#DC143C' : 'var(--text-icons-base-second, #68727D)'
                       }}
                     />
                     {isHovered && <span>{item.name}</span>}
@@ -180,11 +180,11 @@ export function Navigation() {
                         onClick={handleLinkClick}
                         className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm ${
                           isSubActive 
-                            ? 'bg-blue-50 text-blue-600 border-l-2 border-blue-600' 
+                            ? 'bg-red-50 text-red-600 border-l-2 border-red-600' 
                             : 'hover:bg-gray-50'
                         }`}
                         style={{
-                          color: isSubActive ? '#2563eb' : 'var(--text-icons-base-second, #68727D)',
+                          color: isSubActive ? '#DC143C' : 'var(--text-icons-base-second, #68727D)',
                           fontFamily: 'Inter',
                           fontSize: '14px',
                           fontStyle: 'normal',
@@ -195,7 +195,7 @@ export function Navigation() {
                         <SubIcon 
                           className="h-4 w-4 flex-shrink-0" 
                           style={{
-                            color: isSubActive ? '#2563eb' : 'var(--text-icons-base-second, #68727D)'
+                            color: isSubActive ? '#DC143C' : 'var(--text-icons-base-second, #68727D)'
                           }}
                         />
                         <span>{subItem.name}</span>

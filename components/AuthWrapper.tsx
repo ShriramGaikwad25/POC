@@ -19,7 +19,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
       router.push('/login');
     } else if (isAuthenticated && pathname === '/login') {
       setIsRedirecting(true);
-      router.push('/applications');
+      router.push('/dashboard');
     } else {
       setIsRedirecting(false);
     }

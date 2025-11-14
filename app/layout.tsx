@@ -14,6 +14,9 @@ import { RightSidebarProvider } from "@/contexts/RightSidebarContext";
 import { LeftSidebarProvider } from "@/contexts/LeftSidebarContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { SelectedUsersProvider } from "@/contexts/SelectedUsersContext";
+import { SelectedGroupsProvider } from "@/contexts/SelectedGroupsContext";
+import { SelectedAppsProvider } from "@/contexts/SelectedAppsContext";
+import { SelectedEntitlementsProvider } from "@/contexts/SelectedEntitlementsContext";
 import { ItemDetailsProvider } from "@/contexts/ItemDetailsContext";
 import RightSideBarHost from "@/components/RightSideBarHost";
 import LayoutContentShift from "@/components/LayoutContentShift";
@@ -21,7 +24,7 @@ import LayoutContentShift from "@/components/LayoutContentShift";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "KeyForge",
+  title: "Inspire",
   description: "Identity Security Posture Management",
 };
 
@@ -39,20 +42,26 @@ export default function RootLayout({
               <ActionPanelProvider>
                 <CartProvider>
                   <SelectedUsersProvider>
-                    <ItemDetailsProvider>
-                      <RightSidebarProvider>
-                      <LeftSidebarProvider>
-                        <AuthWrapper>
-                          <LayoutContentShift>
-                            {children}
-                          </LayoutContentShift>
-                        </AuthWrapper>
-                        <RightSideBarHost />
-                        <PageTransitionLoader />
-                        <ActionPanel />
-                      </LeftSidebarProvider>
-                    </RightSidebarProvider>
-                    </ItemDetailsProvider>
+                    <SelectedGroupsProvider>
+                      <SelectedAppsProvider>
+                        <SelectedEntitlementsProvider>
+                          <ItemDetailsProvider>
+                        <RightSidebarProvider>
+                        <LeftSidebarProvider>
+                          <AuthWrapper>
+                            <LayoutContentShift>
+                              {children}
+                            </LayoutContentShift>
+                          </AuthWrapper>
+                          <RightSideBarHost />
+                          <PageTransitionLoader />
+                          <ActionPanel />
+                        </LeftSidebarProvider>
+                      </RightSidebarProvider>
+                          </ItemDetailsProvider>
+                        </SelectedEntitlementsProvider>
+                      </SelectedAppsProvider>
+                    </SelectedGroupsProvider>
                   </SelectedUsersProvider>
                 </CartProvider>
               </ActionPanelProvider>
