@@ -267,17 +267,17 @@ const SelectAccessCombined: React.FC = () => {
     return contextSelectedApps.map((app) => app.applicationName);
   }, [contextSelectedApps]);
 
+  // Filter entitlements by selected apps only (without search query)
+  const entitlementsForSelectedApps = useMemo(() => {
+    if (selectedAppNames.length > 0) {
+      return allEntitlements.filter((ent) => selectedAppNames.includes(ent.applicationName));
+    }
+    return [];
+  }, [allEntitlements, selectedAppNames]);
+
   // Filter entitlements based on selected apps and search query
   const filteredEntitlements = useMemo(() => {
-    let filtered = allEntitlements;
-
-    // First filter by selected applications
-    if (selectedAppNames.length > 0) {
-      filtered = filtered.filter((ent) => selectedAppNames.includes(ent.applicationName));
-    } else {
-      // If no apps selected, show empty
-      filtered = [];
-    }
+    let filtered = entitlementsForSelectedApps;
 
     // Then filter by search query
     if (searchQuery.trim()) {
@@ -291,7 +291,7 @@ const SelectAccessCombined: React.FC = () => {
     }
 
     return filtered;
-  }, [allEntitlements, selectedAppNames, searchQuery]);
+  }, [entitlementsForSelectedApps, searchQuery]);
 
   // Removed continuous sync useEffect to prevent blinking - selection is handled by onSelectionChanged only
 
@@ -630,6 +630,58 @@ const SelectAccessCombined: React.FC = () => {
       }
     }, [localSelectedEntitlementIds, filteredEntitlements, addEntitlement, removeEntitlement]);
 
+    // Handle select all / deselect all
+    const handleSelectAllEntitlements = useCallback(() => {
+      const allSelected = filteredEntitlements.every((ent) => localSelectedEntitlementIds.has(ent.id));
+      
+      if (allSelected) {
+        // Deselect all - batch update local state first
+        const newSet = new Set(localSelectedEntitlementIds);
+        const entitlementsToRemove: string[] = [];
+        filteredEntitlements.forEach((ent) => {
+          if (newSet.has(ent.id)) {
+            newSet.delete(ent.id);
+            entitlementsToRemove.push(ent.id);
+          }
+        });
+        setLocalSelectedEntitlementIds(newSet);
+        
+        // Then remove from context
+        setTimeout(() => {
+          entitlementsToRemove.forEach((entId) => {
+            removeEntitlement(entId);
+          });
+        }, 0);
+      } else {
+        // Select all - batch update local state first
+        const newSet = new Set(localSelectedEntitlementIds);
+        const entitlementsToAdd: Entitlement[] = [];
+        filteredEntitlements.forEach((ent) => {
+          if (!newSet.has(ent.id)) {
+            newSet.add(ent.id);
+            entitlementsToAdd.push({
+              id: ent.id,
+              entitlementName: ent.entitlementName,
+              entitlementType: ent.entitlementType,
+              applicationName: ent.applicationName,
+              description: ent.description,
+              risk: ent.risk,
+              lastReviewed: ent.lastReviewed,
+              scope: ent.scope,
+            });
+          }
+        });
+        setLocalSelectedEntitlementIds(newSet);
+        
+        // Then add to context
+        setTimeout(() => {
+          entitlementsToAdd.forEach((entitlementData) => {
+            addEntitlement(entitlementData);
+          });
+        }, 0);
+      }
+    }, [filteredEntitlements, localSelectedEntitlementIds, addEntitlement, removeEntitlement]);
+
     return (
       <div className="flex gap-6 h-[600px] w-full">
         {/* Left Side - Applications List */}
@@ -706,19 +758,40 @@ const SelectAccessCombined: React.FC = () => {
             )}
             {contextSelectedApps.length > 0 && (
               <>
-                <div className="relative max-w-md mb-4">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search entitlements..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      placeholder="Search entitlements..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSelectAllEntitlements}
+                    disabled={filteredEntitlements.length === 0}
+                    className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors whitespace-nowrap flex-shrink-0 ${
+                      filteredEntitlements.length === 0
+                        ? "text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed"
+                        : filteredEntitlements.length > 0 && filteredEntitlements.every((ent) => localSelectedEntitlementIds.has(ent.id))
+                        ? "text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100"
+                        : "text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100"
+                    }`}
+                  >
+                    {filteredEntitlements.length > 0 && filteredEntitlements.every((ent) => localSelectedEntitlementIds.has(ent.id))
+                      ? "Deselect All"
+                      : "Select All"}
+                  </button>
                 </div>
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800">
                     Showing entitlements for: {contextSelectedApps.map(a => a.applicationName).join(", ")}
+                    {filteredEntitlements.length > 0 && (
+                      <span className="ml-2">({filteredEntitlements.length} available)</span>
+                    )}
                   </p>
                 </div>
               </>
