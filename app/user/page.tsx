@@ -197,7 +197,7 @@ const columnDefs = useMemo<ColDef[]>(
             >
               {initials}
             </div>
-            <span style={{ color: "#1677ff", cursor: "pointer" }}>
+            <span style={{ color: "#1677ff" }}>
               {params.value}
             </span>
           </div>
@@ -329,7 +329,6 @@ const columnDefs = useMemo<ColDef[]>(
           columnDefs={columnDefs}
           rowData={paginatedData}
           domLayout="autoHeight"
-          onRowClicked={handleRowClick}
         />
       </div>
       
