@@ -1,4 +1,4 @@
-import { Settings, ListTodo, ListTree, LayoutDashboard, LayoutPanelLeft, User2Icon, UserCircle2Icon, ScreenShareIcon, Package, Plus, Server, Key, FileText, ClipboardList, Search, User, Store, Users, Shield, Image } from 'lucide-react';
+import { ListTodo, ListTree, LayoutDashboard, LayoutPanelLeft, User2Icon, UserCircle2Icon, ScreenShareIcon, Package, Plus, Server, Key, FileText, ClipboardList, Search, User, Store, Users, Shield, Image } from 'lucide-react';
 
 export interface NavItem {
   name: string;
@@ -14,6 +14,5 @@ export const navLinks: NavItem[] = [
   { name: 'My Stores', href: '/stores', icon: Store },
   { name: 'My Users', href: '/user', icon: Users },
   { name: 'Roles', href: '/roles', icon: Shield },
-  { name: 'Settings', href: '/settings', icon: Settings },
   // { name: 'Banner', href: '/banner', icon: Image },
 ];

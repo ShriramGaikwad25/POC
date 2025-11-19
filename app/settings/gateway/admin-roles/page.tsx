@@ -10,21 +10,40 @@ interface RoleInfo {
   description: string;
 }
 
-const FALLBACK_ROLES: RoleInfo[] = [
-  { name: "Domain Administrator", description: "" },
-  { name: "Security Administrator", description: "" },
-  { name: "Application Administrator", description: "" },
-  { name: "User Administrator", description: "" },
-  { name: "Help Desk Administrator", description: "" },
-  { name: "Audit Administrator", description: "" },
+const REGIONAL_ROLES: RoleInfo[] = [
+  { name: "District Manager", description: "Oversees multiple stores within a district, manages operations, and ensures compliance with company standards." },
+  { name: "Region Leaders", description: "Leads regional operations, coordinates district managers, and implements strategic initiatives across the region." },
+  { name: "VPs", description: "Vice Presidents responsible for high-level strategic planning, decision-making, and organizational leadership." },
+  { name: "Support Teams", description: "Provides operational support, training, and assistance to stores and regional management teams." },
 ];
 
+const STORE_ROLES: RoleInfo[] = [
+  { name: "Store manager", description: "Manages daily store operations, staff scheduling, inventory, and customer service standards." },
+  { name: "Bar manager", description: "Oversees bar operations, manages bar staff, inventory, and ensures quality beverage service." },
+  { name: "Assistant managers", description: "Assists store manager with daily operations, staff supervision, and administrative tasks." },
+  { name: "Shift leaders", description: "Leads shifts, supervises staff during assigned periods, and ensures operational standards are met." },
+];
+
+const CORPORATE_ROLES: RoleInfo[] = [
+  { name: "Franchise Admin", description: "Manages franchise operations, relationships, compliance, and administrative processes for franchise locations." },
+  { name: "Technology manager", description: "Oversees IT infrastructure, systems, technology implementations, and technical support across the organization." },
+  { name: "customer service manager", description: "Manages customer service operations, handles escalations, and ensures high-quality customer experience." },
+];
+
+type CategoryTabKey = "regional" | "store" | "corporate";
 type TabKey = "users" | "privileges" | "scope";
 
+const ROLE_CATEGORIES: Record<CategoryTabKey, RoleInfo[]> = {
+  regional: REGIONAL_ROLES,
+  store: STORE_ROLES,
+  corporate: CORPORATE_ROLES,
+};
+
 export default function GatewayAdminRolesSettings() {
+  const [activeCategoryTab, setActiveCategoryTab] = useState<CategoryTabKey>("regional");
   const [activeRoleIdx, setActiveRoleIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<TabKey>("users");
-  const [roles, setRoles] = useState<RoleInfo[]>(FALLBACK_ROLES);
+  const roles = ROLE_CATEGORIES[activeCategoryTab];
   const role = roles[activeRoleIdx];
   const [rolePrivileges, setRolePrivileges] = useState<Record<string, string[]>>({});
   const [allPrivileges, setAllPrivileges] = useState<string[]>([]);
@@ -32,20 +51,16 @@ export default function GatewayAdminRolesSettings() {
   const [privPage, setPrivPage] = useState(1);
   const privPageSize = 10;
 
+  // Reset active role index when category tab changes
+  useEffect(() => {
+    setActiveRoleIdx(0);
+  }, [activeCategoryTab]);
+
   useEffect(() => {
     const controller = new AbortController();
     const load = async () => {
       try {
-        const [rolesRes, privRes] = await Promise.all([
-          fetch("https://preview.keyforge.ai/privilegedrole/api/v1/ACMECOM/adminrole", { signal: controller.signal }),
-          fetch("https://preview.keyforge.ai/privilegedrole/api/v1/ACMECOM/roleprivilege", { signal: controller.signal }),
-        ]);
-        if (!rolesRes.ok) throw new Error(`Roles request failed: ${rolesRes.status}`);
-        const data: Array<{ adminRole: string; description: string }>= await rolesRes.json();
-        const mapped: RoleInfo[] = data.map(d => ({ name: d.adminRole, description: d.description }));
-        setRoles(mapped);
-        setActiveRoleIdx(0);
-
+        const privRes = await fetch("https://preview.keyforge.ai/privilegedrole/api/v1/ACMECOM/roleprivilege", { signal: controller.signal });
         if (privRes.ok) {
           const privJson: { privileges?: Array<{ privilegeName: string }>; adminRolePrivileges?: Array<{ adminRole: string; privilegeSet: Array<{ privilegeName: string }> }> } = await privRes.json();
           const map: Record<string, string[]> = {};
@@ -105,14 +120,33 @@ export default function GatewayAdminRolesSettings() {
 
         <div className="bg-white rounded-md shadow overflow-visible">
           {/* Header bar */}
-          <div className="flex items-center justify-between px-5 py-3 text-white" style={{ backgroundColor: '#27B973' }}>
+          <div className="flex items-center justify-between px-5 py-3 text-white bg-gray-700">
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(39, 185, 115, 0.6)' }}>
+              <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-600">
                 <LayoutTemplate className="w-4 h-4" />
               </div>
               <h2 className="font-semibold">Admin Roles</h2>
             </div>
-            <button className="bg-white text-[#27B973] px-3 py-1.5 rounded text-sm font-medium">Submit</button>
+            <button className="bg-white text-gray-700 px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">Submit</button>
+          </div>
+
+          {/* Category Tabs */}
+          <div className="border-b border-gray-200 px-4 pt-4">
+            <div className="flex items-center gap-6">
+              {([
+                { key: "regional", label: "Regional Role" },
+                { key: "store", label: "Store roles" },
+                { key: "corporate", label: "Corporate roles" },
+              ] as Array<{key: CategoryTabKey; label: string}>).map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveCategoryTab(t.key)}
+                  className={`px-1.5 py-2 -mb-px border-b-2 ${activeCategoryTab===t.key ? 'border-red-600 text-red-600' : 'border-transparent text-gray-600 hover:text-gray-800'}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-[280px_1fr] gap-4 p-4 min-h-100">
@@ -122,7 +156,7 @@ export default function GatewayAdminRolesSettings() {
                 <button
                   key={r.name}
                   onClick={() => setActiveRoleIdx(idx)}
-                  className={`w-full text-left px-4 py-3 border-b last:border-b-0 ${idx===activeRoleIdx ? 'bg-blue-600 text-white' : 'hover:bg-gray-50'}`}
+                  className={`w-full text-left px-4 py-3 border-b last:border-b-0 ${idx===activeRoleIdx ? 'bg-red-50 text-red-600 border-l-4 border-red-600' : 'hover:bg-gray-50'}`}
                 >
                   {r.name}
                 </button>
@@ -142,14 +176,14 @@ export default function GatewayAdminRolesSettings() {
                     <button
                       key={t.key}
                       onClick={() => setActiveTab(t.key)}
-                      className={`px-1.5 py-2 -mb-px border-b-2 ${activeTab===t.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'}`}
+                      className={`px-1.5 py-2 -mb-px border-b-2 ${activeTab===t.key ? 'border-red-600 text-red-600' : 'border-transparent text-gray-600 hover:text-gray-800'}`}
                     >
                       {t.label}
                     </button>
                   ))}
                 </div>
                 {activeTab === 'users' && (
-                  <button className="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded text-sm self-center">
+                  <button className="inline-flex items-center gap-2 bg-red-600 text-white px-3 py-1.5 rounded text-sm self-center hover:bg-red-700 transition-colors">
                     <UserPlus className="w-4 h-4" />
                     <span>Add User</span>
                   </button>
@@ -200,7 +234,7 @@ export default function GatewayAdminRolesSettings() {
                     <div className="ml-auto">
                       <button
                         type="button"
-                        className="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded text-sm"
+                        className="inline-flex items-center gap-2 bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700 transition-colors"
                         onClick={() => {
                           if (!selectedPrivilege || !role) return;
                           setRolePrivileges(prev => {

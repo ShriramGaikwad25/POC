@@ -8,6 +8,10 @@ import dynamic from "next/dynamic";
 const AgGridReact = dynamic(() => import("ag-grid-react").then(mod => mod.AgGridReact), { ssr: false });
 import "@/lib/ag-grid-setup";
 import { ColDef } from "ag-grid-enterprise";
+import HorizontalTabs from "@/components/HorizontalTabs";
+import StoreTab from "@/app/access-request/StoreTab";
+import RegionTab from "@/app/access-request/RegionTab";
+import { useSelectedLocations } from "@/contexts/SelectedLocationsContext";
 
 interface User {
   id: string;
@@ -53,7 +57,9 @@ interface FormData {
 
 export default function CreateStorePage() {
   const router = useRouter();
+  const { selectedLocations } = useSelectedLocations();
   const [currentStep, setCurrentStep] = useState(1);
+  const [activeLocationTab, setActiveLocationTab] = useState(0);
   const [validationStatus, setValidationStatus] = useState<boolean[]>([
     false,
     false,
@@ -84,8 +90,19 @@ export default function CreateStorePage() {
 
   const steps = [
     { id: 1, title: "Group Details" },
-    { id: 2, title: "Select Users" },
+    { id: 2, title: "Select store" },
     { id: 3, title: "Review & Submit" },
+  ];
+
+  const locationTabs = [
+    {
+      label: "Store",
+      component: StoreTab,
+    },
+    {
+      label: "Region",
+      component: RegionTab,
+    },
   ];
 
   // Fetch users data
@@ -346,22 +363,15 @@ export default function CreateStorePage() {
     }
   }, [gridApi, formData.step2.selectionMethod]);
 
-  // Validate Step 2
+  // Validate Step 2 - Check if locations are selected
   useEffect(() => {
-    let isValid = false;
-    if (formData.step2.selectionMethod === "specific") {
-      isValid = formData.step2.selectedUsers.length > 0;
-    } else if (formData.step2.selectionMethod === "selectEach") {
-      isValid = formData.step2.selectedUsers.length > 0;
-    } else if (formData.step2.selectionMethod === "upload") {
-      isValid = formData.step2.uploadedFile !== null;
-    }
+    const isValid = selectedLocations.length > 0;
     setValidationStatus((prev) => {
       const newStatus = [...prev];
       newStatus[1] = isValid;
       return newStatus;
     });
-  }, [formData.step2]);
+  }, [selectedLocations]);
 
   // Step 3 is always valid if we reach it
   useEffect(() => {
@@ -530,7 +540,7 @@ export default function CreateStorePage() {
                   ? 'top-0.5 text-xs text-blue-600' 
                   : 'top-3.5 text-sm text-gray-500'
               }`}>
-                User Group Name <span className="text-red-500">*</span>
+                Store group name <span className="text-red-500">*</span>
               </label>
             </div>
             <div className="relative">
@@ -618,220 +628,18 @@ export default function CreateStorePage() {
 
         {currentStep === 2 && (
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Select Users Method <span className="text-red-500">*</span>
-              </label>
-              <div className="flex">
-                {[
-                  { value: "specific", label: "Specific Users" },
-                  { value: "selectEach", label: "Select Each User" },
-                  { value: "upload", label: "Upload File" },
-                ].map((option, index, array) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        step2: {
-                          ...prev.step2,
-                          selectionMethod: option.value as "specific" | "selectEach" | "upload",
-                        },
-                      }));
-                      // Reset search state when switching methods
-                      if (option.value === "specific") {
-                        setHasSearched(false);
-                        setSearchQuery("");
-                      }
-                    }}
-                    className={`px-4 py-2 min-w-16 rounded-md border border-gray-300 ${
-                      formData.step2.selectionMethod === option.value
-                        ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-700 hover:bg-gray-50"
-                    } ${index === 0 && "rounded-r-none"} ${
-                      array.length > 2 &&
-                      index === 1 &&
-                      "rounded-none border-r-0 border-l-0"
-                    } ${index === array.length - 1 && "rounded-l-none"}`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Option 1 - Specific Users */}
-            {formData.step2.selectionMethod === "specific" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Search and Select Users <span className="text-red-500">*</span>
-                </label>
-
-                {/* Search Bar */}
-                <div className="mb-4">
-                  <div className="flex gap-2 max-w-md">
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        placeholder="Search by Display Name, Email, Emp ID, Manager, Store Location, or Brand..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter") {
-                            setHasSearched(true);
-                          }
-                        }}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none pr-10"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                        <Search className="h-5 w-5 text-gray-400" />
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setHasSearched(true)}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-                    >
-                      Search
-                    </button>
-                  </div>
-                  {hasSearched && searchQuery && (
-                    <p className="text-sm text-gray-600 mt-2">
-                      Showing {filteredData.length} of {rowData.length} users
-                    </p>
-                  )}
-                </div>
-
-                {/* Table - Only show after search */}
-                {hasSearched && (
-                  <>
-                    <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
-                      <AgGridReact
-                        rowData={filteredData}
-                        columnDefs={columnDefs}
-                        rowSelection="single"
-                        onSelectionChanged={onSelectionChanged}
-                        onGridReady={onGridReady}
-                        suppressRowClickSelection={false}
-                        defaultColDef={{
-                          sortable: true,
-                          filter: true,
-                          resizable: true,
-                        }}
-                        domLayout="normal"
-                        rowHeight={50}
-                        headerHeight={40}
-                        isRowSelectable={(params: any) => true}
-                        getRowId={(params: any) => params.data.id}
-                      />
-                    </div>
-
-                    {formData.step2.selectedUsers.length > 0 && (
-                      <p className="text-sm text-gray-600 mt-2">
-                        1 user selected
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Option 2 - Select Each User */}
-            {formData.step2.selectionMethod === "selectEach" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Users <span className="text-red-500">*</span>
-                </label>
-                <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-md p-2">
-                  {users.map((user) => (
-                    <label
-                      key={user.email}
-                      className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.step2.selectedUsers.includes(
-                          user.email
-                        )}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData((prev) => ({
-                              ...prev,
-                              step2: {
-                                ...prev.step2,
-                                selectedUsers: [
-                                  ...prev.step2.selectedUsers,
-                                  user.email,
-                                ],
-                              },
-                            }));
-                          } else {
-                            setFormData((prev) => ({
-                              ...prev,
-                              step2: {
-                                ...prev.step2,
-                                selectedUsers: prev.step2.selectedUsers.filter(
-                                  (email) => email !== user.email
-                                ),
-                              },
-                            }));
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      <span>
-                        {user.name} ({user.email})
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Option 3 - Upload File */}
-            {formData.step2.selectionMethod === "upload" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload File <span className="text-red-500">*</span>
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
-                  <input
-                    type="file"
-                    accept=".csv,.xlsx,.xls"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="file-upload"
-                  />
-                  <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer flex flex-col items-center"
-                  >
-                    <Upload className="w-12 h-12 text-gray-400 mb-2" />
-                    <span className="text-sm text-gray-600">
-                      Click to upload or drag and drop
-                    </span>
-                    <span className="text-xs text-gray-500 mt-1">
-                      CSV, XLSX, XLS files only
-                    </span>
-                  </label>
-                  {formData.step2.uploadedFile && (
-                    <div className="mt-4 p-2 bg-gray-50 rounded">
-                      <p className="text-sm text-gray-700">
-                        Selected: {formData.step2.uploadedFile.name}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            <HorizontalTabs
+              tabs={locationTabs}
+              activeIndex={activeLocationTab}
+              onChange={setActiveLocationTab}
+            />
           </div>
         )}
 
         {currentStep === 3 && (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Review Your User Group
+              Review Your Store Group
             </h3>
             
             <div className="bg-gray-50 p-4 rounded-md space-y-3">
@@ -866,62 +674,27 @@ export default function CreateStorePage() {
                 </span>
               </div>
               <div>
-                <span className="font-medium text-gray-700">
-                  Selection Method:
-                </span>
-                <span className="ml-2 text-gray-900">
-                  {formData.step2.selectionMethod === "specific"
-                    ? "Specific Users"
-                    : formData.step2.selectionMethod === "selectEach"
-                    ? "Select Each User"
-                    : "Upload File"}
-                </span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Selected Users:</span>
+                <span className="font-medium text-gray-700">Selected Locations:</span>
                 <div className="ml-2 mt-1">
-                  {formData.step2.selectionMethod === "specific" && (
+                  {selectedLocations.length > 0 ? (
                     <div className="text-gray-900">
-                      {formData.step2.selectedUsers.length > 0 ? (
-                        <div>
-                          <p className="text-sm mb-2">
-                            1 user selected
-                          </p>
-                          <ul className="list-disc list-inside mt-1 text-sm">
-                            {formData.step2.selectedUsers.map((userId) => {
-                              const user = rowData.find((u) => u.id === userId);
-                              return (
-                                <li key={userId}>
-                                  {user?.displayName || userId} ({user?.email || ""})
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      ) : (
-                        <span className="text-gray-500">No user selected</span>
-                      )}
-                    </div>
-                  )}
-                  {formData.step2.selectionMethod === "selectEach" && (
-                    <div className="text-gray-900">
-                      {formData.step2.selectedUsers.length} user(s) selected
+                      <p className="text-sm mb-2">
+                        {selectedLocations.length} location(s) selected
+                      </p>
                       <ul className="list-disc list-inside mt-1 text-sm">
-                        {formData.step2.selectedUsers.map((email) => {
-                          const user = users.find((u) => u.email === email);
-                          return (
-                            <li key={email}>
-                              {user?.name || email} ({email})
-                            </li>
-                          );
-                        })}
+                        {selectedLocations.map((location) => (
+                          <li key={location.id}>
+                            {location.name} ({location.type})
+                            {location.storeNumber && ` - ${location.storeNumber}`}
+                            {location.location && ` - ${location.location}`}
+                            {location.brand && ` - ${location.brand}`}
+                            {location.region && ` - ${location.region}`}
+                          </li>
+                        ))}
                       </ul>
                     </div>
-                  )}
-                  {formData.step2.selectionMethod === "upload" && (
-                    <div className="text-gray-900">
-                      {formData.step2.uploadedFile?.name || "No file selected"}
-                    </div>
+                  ) : (
+                    <span className="text-gray-500">No locations selected</span>
                   )}
                 </div>
               </div>

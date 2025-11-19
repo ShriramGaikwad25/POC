@@ -12,12 +12,14 @@ import { useSelectedUsers } from "@/contexts/SelectedUsersContext";
 import { useSelectedGroups } from "@/contexts/SelectedGroupsContext";
 import { useSelectedApps } from "@/contexts/SelectedAppsContext";
 import { useSelectedEntitlements } from "@/contexts/SelectedEntitlementsContext";
+import { useSelectedLocations } from "@/contexts/SelectedLocationsContext";
 
 const AccessRequest: React.FC = () => {
   const { selectedUsers, removeUser, clearUsers } = useSelectedUsers();
   const { selectedGroups, removeGroup, clearGroups } = useSelectedGroups();
   const { selectedApps, removeApp, clearApps } = useSelectedApps();
   const { selectedEntitlements, clearEntitlements } = useSelectedEntitlements();
+  const { selectedLocations, clearLocations } = useSelectedLocations();
   const [currentStep, setCurrentStep] = useState(1);
   const [activeTab, setActiveTab] = useState(0);
   const [activeLocationTab, setActiveLocationTab] = useState(0);
@@ -126,6 +128,7 @@ const AccessRequest: React.FC = () => {
                   clearGroups();
                   clearApps();
                   clearEntitlements();
+                  clearLocations();
                   
                   // Reset to step 1
                   setCurrentStep(1);
@@ -248,10 +251,109 @@ const AccessRequest: React.FC = () => {
 
       {/* Step 3 Content - Select Access */}
       {currentStep === 3 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">Select Access</h2>
-          <SelectAccessCombined />
-        </div>
+        <>
+          {/* Summary Section - Users and Stores Information */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Request Summary</h2>
+            
+            {/* Selected Users */}
+            {(selectedUsers.length > 0 || selectedGroups.length > 0) && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">Selected Users ({selectedUsers.length + selectedGroups.length})</h3>
+                {selectedUsers.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Individual Users ({selectedUsers.length})</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {selectedUsers.map((user) => (
+                        <div
+                          key={user.id}
+                          className="p-3 border border-gray-200 rounded-lg bg-gray-50"
+                        >
+                          <p className="font-medium text-sm text-gray-900 truncate">{user.name}</p>
+                          <p className="text-xs text-gray-500 truncate mt-1">{user.username}</p>
+                          <p className="text-xs text-gray-600 truncate mt-1">{user.email}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedGroups.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">User Groups ({selectedGroups.length})</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {selectedGroups.map((group) => (
+                        <div
+                          key={group.id}
+                          className="p-3 border border-gray-200 rounded-lg bg-gray-50"
+                        >
+                          <p className="font-medium text-sm text-gray-900 truncate">{group.groupName}</p>
+                          <p className="text-xs text-gray-500 truncate mt-1">{group.description}</p>
+                          <p className="text-xs text-gray-600 truncate mt-1">{group.numberOfUsers} users</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Selected Locations/Stores */}
+            {selectedLocations.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">Selected Locations ({selectedLocations.length})</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {selectedLocations.map((location) => (
+                    <div
+                      key={location.id}
+                      className="p-3 border border-gray-200 rounded-lg bg-gray-50"
+                    >
+                      <p className="font-medium text-sm text-gray-900 truncate">{location.name}</p>
+                      {location.type === 'store' && (
+                        <>
+                          {location.storeNumber && (
+                            <p className="text-xs text-gray-500 truncate mt-1">Store #: {location.storeNumber}</p>
+                          )}
+                          {location.location && (
+                            <p className="text-xs text-gray-600 truncate mt-1">{location.location}</p>
+                          )}
+                          {location.brand && (
+                            <p className="text-xs text-gray-600 truncate mt-1">Brand: {location.brand}</p>
+                          )}
+                        </>
+                      )}
+                      {location.type === 'region' && (
+                        <>
+                          {location.numberOfStores && (
+                            <p className="text-xs text-gray-500 truncate mt-1">{location.numberOfStores} stores</p>
+                          )}
+                          {location.description && (
+                            <p className="text-xs text-gray-600 truncate mt-1">{location.description}</p>
+                          )}
+                        </>
+                      )}
+                      {location.type === 'customGroup' && (
+                        <>
+                          {location.numberOfStores && (
+                            <p className="text-xs text-gray-500 truncate mt-1">{location.numberOfStores} stores</p>
+                          )}
+                          {location.description && (
+                            <p className="text-xs text-gray-600 truncate mt-1">{location.description}</p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Select Access Section */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Select Access</h2>
+            <SelectAccessCombined />
+          </div>
+        </>
       )}
     </div>
   );

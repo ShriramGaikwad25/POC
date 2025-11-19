@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { User, Key, Store, Users, Shield, Settings } from "lucide-react";
+import { User, Key, Store, Users, Shield } from "lucide-react";
 import DashboardCard from "@/components/DashboardCard";
 import "../dashboard.css";
 
@@ -41,13 +41,6 @@ export default function Dashboard() {
       icon: Shield,
       color: "orange" as const,
       description: "Manage roles and permissions",
-    },
-    {
-      title: "Settings",
-      href: "/settings",
-      icon: Settings,
-      color: "gray" as const,
-      description: "Configure application settings",
     },
   ];
 

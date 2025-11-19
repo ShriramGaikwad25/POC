@@ -10,6 +10,7 @@ import {
   ColDef,
   GridApi,
   ICellRendererParams,
+  ValueFormatterParams,
 } from "ag-grid-enterprise";
 import {
   ChevronDown,
@@ -17,6 +18,7 @@ import {
   Edit,
   ArrowRight,
   Plus,
+  Search,
 } from "lucide-react";
 import { formatDateMMDDYY } from "@/utils/utils";
 import "@/lib/ag-grid-setup";
@@ -25,6 +27,7 @@ import Exports from "@/components/agTable/Exports";
 import CustomPagination from "@/components/agTable/CustomPagination";
 import { useRightSidebar } from "@/contexts/RightSidebarContext";
 import { useRouter } from "next/navigation";
+import HorizontalTabs from "@/components/HorizontalTabs";
 
 interface DataItem {
   label: string;
@@ -36,18 +39,194 @@ const dataStore: Record<string, DataItem[]> = {
   storeSummary: [
     { label: "Active Stores", value: 0 },
     { label: "Inactive Stores", value: 0 },
-    { label: "Pending Stores", value: 0 },
-    { label: "Archived Stores", value: 0 },
-  ],
-  storeActivity: [
-    { label: "Updated in past 30 days", value: 0 },
-    { label: "Updated in past 30-60 days", value: 0 },
-    { label: "Not updated for more than 90 days", value: 0 },
+    { label: "Stores without Manager", value: 0 },
   ],
 };
 
-export default function StoresPage() {
-  const router = useRouter();
+interface CustomGroupRow {
+  id: string;
+  storeName: string;
+  storeNumber: string;
+  location: string;
+  brand: string;
+  region: string;
+  status: string;
+}
+
+// Custom Groups Tab Component
+const CustomGroupsTab: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [rowData, setRowData] = useState<CustomGroupRow[]>([]);
+  const gridApiRef = useRef<GridApi | null>(null);
+
+  useEffect(() => {
+    // Static data from Request Access - Store selection
+    const mockStores: CustomGroupRow[] = [
+      {
+        id: "1",
+        storeName: "Arby's Downtown",
+        storeNumber: "ARB-001",
+        location: "New York, NY",
+        brand: "Arby's",
+        region: "Northeast",
+        status: "Active",
+      },
+      {
+        id: "2",
+        storeName: "Baskin-Robbins Main St",
+        storeNumber: "BR-045",
+        location: "Los Angeles, CA",
+        brand: "Baskin-Robbins",
+        region: "West",
+        status: "Active",
+      },
+      {
+        id: "3",
+        storeName: "Buffalo Wild Wings Central",
+        storeNumber: "BWW-123",
+        location: "Chicago, IL",
+        brand: "Buffalo Wild Wings",
+        region: "Midwest",
+        status: "Active",
+      },
+      {
+        id: "4",
+        storeName: "Dunkin' Express",
+        storeNumber: "DD-789",
+        location: "Houston, TX",
+        brand: "Dunkin'",
+        region: "South",
+        status: "Active",
+      },
+      {
+        id: "5",
+        storeName: "Jimmy John's University",
+        storeNumber: "JJ-234",
+        location: "Phoenix, AZ",
+        brand: "Jimmy John's",
+        region: "West",
+        status: "Active",
+      },
+      {
+        id: "6",
+        storeName: "SONIC Drive-In",
+        storeNumber: "SON-567",
+        location: "Philadelphia, PA",
+        brand: "SONIC",
+        region: "Northeast",
+        status: "Active",
+      },
+    ];
+    setRowData(mockStores);
+  }, []);
+
+  // Filter data based on search query
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return rowData;
+    }
+    const query = searchQuery.toLowerCase();
+    return rowData.filter((store) =>
+      store.storeName.toLowerCase().includes(query) ||
+      store.storeNumber.toLowerCase().includes(query) ||
+      store.location.toLowerCase().includes(query) ||
+      store.brand.toLowerCase().includes(query) ||
+      store.region.toLowerCase().includes(query)
+    );
+  }, [rowData, searchQuery]);
+
+  const columnDefs = useMemo<ColDef[]>(
+    () => [
+      {
+        headerName: "Store Name",
+        field: "storeName",
+        flex: 1,
+        minWidth: 200,
+      },
+      {
+        headerName: "Store Number",
+        field: "storeNumber",
+        flex: 1,
+        minWidth: 120,
+      },
+      {
+        headerName: "Location",
+        field: "location",
+        flex: 1,
+        minWidth: 180,
+      },
+      {
+        headerName: "Brand",
+        field: "brand",
+        flex: 1,
+        minWidth: 120,
+      },
+      {
+        headerName: "Region",
+        field: "region",
+        flex: 1,
+        minWidth: 120,
+      },
+      {
+        headerName: "Status",
+        field: "status",
+        flex: 1,
+        minWidth: 100,
+      },
+    ],
+    []
+  );
+
+  return (
+    <div className="p-6">
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <input
+            type="text"
+            placeholder="Search by Store Name, Number, Location, Brand, or Region..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              gridApiRef.current?.setGridOption("quickFilterText", e.target.value);
+            }}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none pr-10"
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+        </div>
+        {searchQuery && (
+          <p className="text-sm text-gray-600 mt-2">
+            Showing {filteredData.length} of {rowData.length} stores
+          </p>
+        )}
+      </div>
+
+      {/* Table */}
+      <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
+        <AgGridReact
+          rowData={filteredData}
+          columnDefs={columnDefs}
+          defaultColDef={{
+            sortable: true,
+            filter: true,
+            resizable: true,
+          }}
+          onGridReady={(params) => {
+            gridApiRef.current = params.api;
+          }}
+          domLayout="normal"
+          rowHeight={50}
+          headerHeight={40}
+        />
+      </div>
+    </div>
+  );
+};
+
+// My Stores Tab Component
+const MyStoresTab: React.FC = () => {
   const { openSidebar, closeSidebar } = useRightSidebar();
   const [mounted, setMounted] = useState(false);
   const gridApiRef = useRef<GridApi | null>(null);
@@ -86,6 +265,16 @@ export default function StoresPage() {
   const columnDefs = useMemo<ColDef[]>(
     () => [
       {
+        field: "storeId",
+        headerName: "Store ID",
+        flex: 1.5,
+        cellRenderer: (params: ICellRendererParams) => (
+          <div className="flex flex-col gap-0">
+            <span className="text-md text-gray-800">{params.value || "-"}</span>
+          </div>
+        ),
+      },
+      {
         field: "storeName",
         headerName: "Store Name",
         flex: 2,
@@ -96,9 +285,8 @@ export default function StoresPage() {
         ),
       },
       {
-        field: "storeType",
-        headerName: "Store Type",
-        enableRowGroup: true,
+        field: "manager",
+        headerName: "Manager",
         flex: 2,
         cellRenderer: (params: ICellRendererParams) => (
           <div className="flex flex-col gap-0">
@@ -107,38 +295,45 @@ export default function StoresPage() {
         ),
       },
       {
-        field: "owner",
-        headerName: "Owner",
-        flex: 2,
+        field: "brand",
+        headerName: "Brand",
+        flex: 1.5,
         cellRenderer: (params: ICellRendererParams) => (
           <div className="flex flex-col gap-0">
-            <span className="text-md text-gray-800">{params.value || params.data?.storeOwner || "-"}</span>
+            <span className="text-md text-gray-800">{params.value || "-"}</span>
           </div>
         ),
       },
       {
-        field: "lastUpdated",
-        headerName: "Last Updated",
-        enableRowGroup: true,
+        field: "address",
+        headerName: "Address",
+        flex: 2.5,
+        cellRenderer: (params: ICellRendererParams) => (
+          <div className="flex flex-col gap-0">
+            <span className="text-md text-gray-800">{params.value || "-"}</span>
+          </div>
+        ),
+      },
+      {
+        field: "region",
+        headerName: "Region",
         flex: 1.5,
-        valueFormatter: (params: ICellRendererParams) =>
+        cellRenderer: (params: ICellRendererParams) => (
+          <div className="flex flex-col gap-0">
+            <span className="text-md text-gray-800">{params.value || "-"}</span>
+          </div>
+        ),
+      },
+      {
+        field: "operatingSince",
+        headerName: "Operating Since",
+        flex: 1.5,
+        valueFormatter: (params: ValueFormatterParams) =>
           params.value ? formatDateMMDDYY(params.value) : "-",
       },
       {
-        field: "status",
-        headerName: "Status",
-        flex: 1.5,
-        cellRenderer: (params: ICellRendererParams) => (
-          <div className="flex flex-col gap-0">
-            <span className="text-md text-gray-800">
-              {params.value || params.data?.storeStatus || "-"}
-            </span>
-          </div>
-        ),
-      },
-      {
         field: "__action__",
-        headerName: "Action",
+        headerName: "Actions",
         width: 150,
         sortable: false,
         filter: false,
@@ -483,68 +678,112 @@ export default function StoresPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // You can replace this with your actual API endpoint for stores
-        // For now, using dummy data
+        // Convert date strings from MM/DD/YYYY to YYYY-MM-DD format for proper date handling
+        const parseDate = (dateStr: string): string => {
+          const [month, day, year] = dateStr.split('/');
+          return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        };
+
         setStoresRowData([
           {
-            storeName: "app-store-prod-01",
-            storeType: "Application Store",
-            owner: "John Doe",
-            lastUpdated: "2024-01-15",
-            status: "Active",
-            location: "US-East-1",
-            repositoryUrl: "https://github.com/company/app-store-prod",
-            version: "v2.1.0",
-            description: "Production application store for main services. Contains all production-ready applications and configurations.",
+            storeId: "6067",
+            storeName: "CNN Center",
+            manager: "John Smith",
+            brand: "Arby",
+            address: "1 CNN Center, Atlanta",
+            region: "SouthEast",
+            operatingSince: parseDate("11/7/2014"),
           },
           {
-            storeName: "repo-store-dev-02",
-            storeType: "Repository Store",
-            owner: "Jane Smith",
-            lastUpdated: "2024-01-20",
-            status: "Active",
-            location: "US-West-2",
-            repositoryUrl: "https://github.com/company/repo-store-dev",
-            version: "v1.5.3",
-            description: "Development repository store for testing and staging environments. Used for development workflows.",
+            storeId: "358682",
+            storeName: "Metropark Store",
+            manager: "Aaron Smith",
+            brand: "Dunkin",
+            address: "499 Thornall Street, Edison",
+            region: "NorthEast",
+            operatingSince: parseDate("6/15/2010"),
           },
           {
-            storeName: "config-store-qa-03",
-            storeType: "Configuration Store",
-            owner: "Mike Johnson",
-            lastUpdated: "2024-01-10",
-            status: "Inactive",
-            location: "EU-Central-1",
-            repositoryUrl: "https://github.com/company/config-store-qa",
-            version: "v1.0.0",
-            description: "QA configuration store for quality assurance testing. Contains test configurations and settings.",
+            storeId: "359422",
+            storeName: "Piedmont Store",
+            manager: "Rob Harvey",
+            brand: "Dunkin",
+            address: "120 Piedmont Ave, Atlanta",
+            region: "SouthEast",
+            operatingSince: parseDate("9/16/2016"),
+          },
+          {
+            storeId: "359739",
+            storeName: "Moreland Store",
+            manager: "Michael Freel",
+            brand: "Dunkin",
+            address: "1250 Moreland Ave SE",
+            region: "SouthEast",
+            operatingSince: parseDate("4/12/2015"),
+          },
+          {
+            storeId: "7749",
+            storeName: "Airport Store",
+            manager: "John Willis",
+            brand: "Arby",
+            address: "6000 N Terminal Pkwy, Atlanta",
+            region: "SouthEast",
+            operatingSince: parseDate("7/12/2012"),
           },
         ]);
       } catch (error) {
         console.error("Error fetching stores data:", error);
-        // Add dummy data on error
+        // Add same data on error
+        const parseDate = (dateStr: string): string => {
+          const [month, day, year] = dateStr.split('/');
+          return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        };
+
         setStoresRowData([
           {
-            storeName: "app-store-prod-01",
-            storeType: "Application Store",
-            owner: "John Doe",
-            lastUpdated: "2024-01-15",
-            status: "Active",
-            location: "US-East-1",
-            repositoryUrl: "https://github.com/company/app-store-prod",
-            version: "v2.1.0",
-            description: "Production application store for main services. Contains all production-ready applications and configurations.",
+            storeId: "6067",
+            storeName: "CNN Center",
+            manager: "John Smith",
+            brand: "Arby",
+            address: "1 CNN Center, Atlanta",
+            region: "SouthEast",
+            operatingSince: parseDate("11/7/2014"),
           },
           {
-            storeName: "repo-store-dev-02",
-            storeType: "Repository Store",
-            owner: "Jane Smith",
-            lastUpdated: "2024-01-20",
-            status: "Active",
-            location: "US-West-2",
-            repositoryUrl: "https://github.com/company/repo-store-dev",
-            version: "v1.5.3",
-            description: "Development repository store for testing and staging environments. Used for development workflows.",
+            storeId: "358682",
+            storeName: "Metropark Store",
+            manager: "Aaron Smith",
+            brand: "Dunkin",
+            address: "499 Thornall Street, Edison",
+            region: "NorthEast",
+            operatingSince: parseDate("6/15/2010"),
+          },
+          {
+            storeId: "359422",
+            storeName: "Piedmont Store",
+            manager: "Rob Harvey",
+            brand: "Dunkin",
+            address: "120 Piedmont Ave, Atlanta",
+            region: "SouthEast",
+            operatingSince: parseDate("9/16/2016"),
+          },
+          {
+            storeId: "359739",
+            storeName: "Moreland Store",
+            manager: "Michael Freel",
+            brand: "Dunkin",
+            address: "1250 Moreland Ave SE",
+            region: "SouthEast",
+            operatingSince: parseDate("4/12/2015"),
+          },
+          {
+            storeId: "7749",
+            storeName: "Airport Store",
+            manager: "John Willis",
+            brand: "Arby",
+            address: "6000 N Terminal Pkwy, Atlanta",
+            region: "SouthEast",
+            operatingSince: parseDate("7/12/2012"),
           },
         ]);
       }
@@ -553,24 +792,12 @@ export default function StoresPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="w-full py-8 px-4">
-        <div
-          className="ag-theme-alpine"
-          style={{ width: "100%" }}
-        >
-          <div className="relative mb-2">
-            <div className="flex items-center justify-between border-b border-gray-300 pb-2">
-              <h1 className="text-xl font-bold text-blue-950">My Stores</h1>
-              <button
-                onClick={() => router.push("/stores/create")}
-                className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all duration-200 text-sm font-medium"
-                title="Create Store"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Create Store</span>
-              </button>
-            </div>
+    <div>
+      <div
+        className="ag-theme-alpine"
+        style={{ width: "100%" }}
+      >
+        <div className="relative mb-2">
             <Accordion
               iconClass="top-1 right-0 rounded-full text-white bg-purple-800"
               open={true}
@@ -582,12 +809,12 @@ export default function StoresPage() {
                   </h3>
                 </div>
                 <div className="space-y-3">
-                  {/* First row - Store Summary (4 items) */}
+                  {/* First row - Store Summary (3 items) */}
                   <div className="flex">
                     {dataStore.storeSummary.map((item, index) => (
                       <div
                         key={`storeSummary-${index}`}
-                        className={`flex items-center justify-between py-2 px-3 rounded cursor-pointer transition-colors bg-white border border-gray-200 w-1/4 ${
+                        className={`flex items-center justify-between py-2 px-3 rounded cursor-pointer transition-colors bg-white border border-gray-200 w-1/3 ${
                           selected.storeSummary === index
                             ? "bg-blue-100 border-blue-300"
                             : "bg-gray-100"
@@ -627,52 +854,6 @@ export default function StoresPage() {
                       </div>
                     ))}
                   </div>
-
-                  {/* Second row - Store Activity (3 items) */}
-                  <div className="flex">
-                    {dataStore.storeActivity.map((item, index) => (
-                      <div
-                        key={`storeActivity-${index}`}
-                        className={`flex items-center justify-between py-2 px-3 rounded cursor-pointer transition-colors bg-white border border-gray-200 w-1/4 ${
-                          selected.storeActivity === index
-                            ? "bg-blue-100 border-blue-300"
-                            : "bg-gray-100"
-                        } ${item.color || ""}`}
-                        onClick={() => handleSelect("storeActivity", index)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full border-2"
-                            style={{
-                              borderColor: "#6EC6FF",
-                              backgroundColor:
-                                selected.storeActivity === index
-                                  ? "#6EC6FF"
-                                  : "transparent",
-                            }}
-                          ></div>
-                          <span
-                            className={`text-sm ${
-                              selected.storeActivity === index
-                                ? "text-blue-900"
-                                : "text-gray-700"
-                            }`}
-                          >
-                            {item.label}
-                          </span>
-                        </div>
-                        <span
-                          className={`text-sm font-medium ${
-                            selected.storeActivity === index
-                              ? "text-blue-700 border-blue-300"
-                              : "text-gray-900 border-gray-300"
-                          } bg-white border px-2 py-1 rounded text-xs min-w-[20px] text-center`}
-                        >
-                          {item.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
             </Accordion>
@@ -700,8 +881,10 @@ export default function StoresPage() {
                 pageSize={pageSize}
                 onPageChange={handlePageChange}
                 onPageSizeChange={(newPageSize) => {
-                  setPageSize(newPageSize);
-                  setCurrentPage(1); // Reset to first page when changing page size
+                  if (typeof newPageSize === "number") {
+                    setPageSize(newPageSize);
+                    setCurrentPage(1); // Reset to first page when changing page size
+                  }
                   closeSidebar();
                 }}
                 pageSizeOptions={[10, 20, 50, 100]}
@@ -727,11 +910,57 @@ export default function StoresPage() {
               pageSize={pageSize}
               onPageChange={handlePageChange}
               onPageSizeChange={(newPageSize) => {
-                setPageSize(newPageSize);
-                setCurrentPage(1); // Reset to first page when changing page size
+                if (typeof newPageSize === "number") {
+                  setPageSize(newPageSize);
+                  setCurrentPage(1); // Reset to first page when changing page size
+                }
                 closeSidebar();
               }}
               pageSizeOptions={[10, 20, 50, 100]}
+            />
+          </div>
+        </div>
+      </div>
+
+  );
+};
+
+// Main Stores Page Component
+export default function StoresPage() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState(0);
+
+  const tabs = [
+    {
+      label: "My Stores",
+      component: MyStoresTab,
+    },
+    {
+      label: "Custom Groups",
+      component: CustomGroupsTab,
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full py-8 px-4">
+        <div className="ag-theme-alpine" style={{ width: "100%" }}>
+          <div className="relative mb-2">
+            <div className="flex items-center justify-between border-b border-gray-300 pb-2 mb-4">
+              <h1 className="text-xl font-bold text-blue-950">My Stores</h1>
+              <button
+                onClick={() => router.push("/stores/create")}
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all duration-200 text-sm font-medium"
+                title="Create Custom Group"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create Custom Group</span>
+              </button>
+            </div>
+            <HorizontalTabs
+              tabs={tabs}
+              activeIndex={activeTab}
+              onChange={setActiveTab}
             />
           </div>
         </div>

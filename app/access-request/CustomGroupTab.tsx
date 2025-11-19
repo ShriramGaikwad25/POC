@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 const AgGridReact = dynamic(() => import("ag-grid-react").then(mod => mod.AgGridReact), { ssr: false });
 import "@/lib/ag-grid-setup";
 import { ColDef } from "ag-grid-enterprise";
+import { useSelectedLocations, Location } from "@/contexts/SelectedLocationsContext";
 
 interface CustomGroupRow {
   id: string;
@@ -17,6 +18,7 @@ interface CustomGroupRow {
 }
 
 const CustomGroupTab: React.FC = () => {
+  const { selectedLocations, addLocation, removeLocation } = useSelectedLocations();
   const [searchQuery, setSearchQuery] = useState("");
   const [rowData, setRowData] = useState<CustomGroupRow[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
@@ -161,6 +163,28 @@ const CustomGroupTab: React.FC = () => {
     const selectedRows = event.api.getSelectedRows();
     const newSelectedIds = new Set(selectedRows.map((row: CustomGroupRow) => row.id));
     setSelectedGroups(newSelectedIds);
+
+    // Update context
+    const currentSelectedIds = new Set(selectedLocations.filter(l => l.type === 'customGroup').map(l => l.id));
+    
+    // Add new selections
+    selectedRows.forEach((row: CustomGroupRow) => {
+      if (!currentSelectedIds.has(row.id)) {
+        const location: Location = {
+          id: row.id,
+          name: row.groupName,
+          type: 'customGroup',
+          description: row.description,
+          numberOfStores: row.numberOfStores,
+        };
+        addLocation(location);
+      }
+    });
+
+    // Remove unselected custom groups
+    selectedLocations
+      .filter(l => l.type === 'customGroup' && !newSelectedIds.has(l.id))
+      .forEach(location => removeLocation(location.id));
   };
 
   return (

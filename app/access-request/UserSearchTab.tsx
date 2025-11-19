@@ -12,7 +12,7 @@ interface UserRow {
   displayName: string;
   empId: string;
   manager: string;
-  storeLocation: string;
+  storeCode: string;
   brand: string;
   startDate: string;
 }
@@ -31,7 +31,7 @@ const UserSearchTab: React.FC = () => {
         displayName: "John Smith",
         empId: "EMP001",
         manager: "Jane Doe",
-        storeLocation: "New York, NY",
+        storeCode: "6067",
         brand: "Arby's",
         startDate: "2023-01-15",
       },
@@ -40,7 +40,7 @@ const UserSearchTab: React.FC = () => {
         displayName: "Jane Doe",
         empId: "EMP002",
         manager: "Bob Johnson",
-        storeLocation: "Los Angeles, CA",
+        storeCode: "359422",
         brand: "Baskin-Robbins",
         startDate: "2022-05-20",
       },
@@ -49,7 +49,7 @@ const UserSearchTab: React.FC = () => {
         displayName: "Bob Johnson",
         empId: "EMP003",
         manager: "Alice Williams",
-        storeLocation: "Chicago, IL",
+        storeCode: "359739",
         brand: "Buffalo Wild Wings",
         startDate: "2023-03-10",
       },
@@ -58,7 +58,7 @@ const UserSearchTab: React.FC = () => {
         displayName: "Alice Williams",
         empId: "EMP004",
         manager: "Charlie Brown",
-        storeLocation: "Houston, TX",
+        storeCode: "7749",
         brand: "Dunkin'",
         startDate: "2022-11-05",
       },
@@ -67,7 +67,7 @@ const UserSearchTab: React.FC = () => {
         displayName: "Charlie Brown",
         empId: "EMP005",
         manager: "Diana Prince",
-        storeLocation: "Phoenix, AZ",
+        storeCode: "358682",
         brand: "Jimmy John's",
         startDate: "2023-06-18",
       },
@@ -76,7 +76,7 @@ const UserSearchTab: React.FC = () => {
         displayName: "Diana Prince",
         empId: "EMP006",
         manager: "John Smith",
-        storeLocation: "Philadelphia, PA",
+        storeCode: "306008",
         brand: "SONIC",
         startDate: "2022-09-12",
       },
@@ -94,7 +94,7 @@ const UserSearchTab: React.FC = () => {
       user.displayName.toLowerCase().includes(query) ||
       user.empId.toLowerCase().includes(query) ||
       user.manager.toLowerCase().includes(query) ||
-      user.storeLocation.toLowerCase().includes(query) ||
+      user.storeCode.toLowerCase().includes(query) ||
       user.brand.toLowerCase().includes(query)
     );
   }, [rowData, searchQuery]);
@@ -137,8 +137,8 @@ const UserSearchTab: React.FC = () => {
         minWidth: 150,
       },
       {
-        headerName: "Store Location",
-        field: "storeLocation",
+        headerName: "Store Code",
+        field: "storeCode",
         flex: 1,
         minWidth: 180,
       },
@@ -221,7 +221,7 @@ const UserSearchTab: React.FC = () => {
         <div className="relative max-w-md">
           <input
             type="text"
-            placeholder="Search by Display Name, Emp ID, Manager, Store Location, or Brand..."
+            placeholder="Search by Display Name, Emp ID, Manager, Store Code, or Brand..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none pr-10"

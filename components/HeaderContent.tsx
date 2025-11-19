@@ -721,7 +721,7 @@ const HeaderContent = () => {
   return (
     <div className="flex h-[60px] w-full items-center justify-between text-sm pl-0 pr-4" style={{ backgroundColor: '#DC143C' }}>
       {/* Left Section */}
-      <div className="flex items-center h-full -ml-3">
+      <div className="flex items-center h-full -ml-3 flex-1">
         {/* Hamburger Menu Button */}
         <button
           onClick={toggleSidebar}
@@ -885,8 +885,13 @@ const HeaderContent = () => {
         )}
       </div>
 
+      {/* Center Section */}
+      <div className="flex items-center justify-center flex-1 absolute left-1/2 transform -translate-x-1/2 pointer-events-none">
+        <h1 className="text-white font-semibold text-xl">Franchise User Management Portal</h1>
+      </div>
+
       {/* Right Section */}
-      <div className="flex items-center h-full justify-end gap-4 px-4">
+      <div className="flex items-center h-full justify-end gap-4 px-4 flex-1">
         <div className="flex items-center gap-3">
           {renderUserAvatar(userDetails, 36, "object-cover rounded-full w-9 h-9")}
           <span className="text-white font-medium text-sm">

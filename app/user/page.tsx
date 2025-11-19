@@ -293,9 +293,21 @@ const columnDefs = useMemo<ColDef[]>(
   }
 
   return (
-    <div className="ag-theme-alpine" style={{ width: "100%" }}>
-      {/* Top pagination */}
-      <div className="mb-2">
+    <div className="w-full">
+      {/* Header with Create User Button */}
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={() => router.push("/user/create")}
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Create User
+        </button>
+      </div>
+
+      <div className="ag-theme-alpine" style={{ width: "100%" }}>
+        {/* Top pagination */}
+        <div className="mb-2">
         <CustomPagination
           totalItems={totalItems}
           currentPage={pageNumber}
@@ -337,6 +349,7 @@ const columnDefs = useMemo<ColDef[]>(
           }}
           pageSizeOptions={pageSizeSelector}
         />
+      </div>
       </div>
     </div>
   );

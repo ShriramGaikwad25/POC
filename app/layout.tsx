@@ -17,6 +17,7 @@ import { SelectedUsersProvider } from "@/contexts/SelectedUsersContext";
 import { SelectedGroupsProvider } from "@/contexts/SelectedGroupsContext";
 import { SelectedAppsProvider } from "@/contexts/SelectedAppsContext";
 import { SelectedEntitlementsProvider } from "@/contexts/SelectedEntitlementsContext";
+import { SelectedLocationsProvider } from "@/contexts/SelectedLocationsContext";
 import { ItemDetailsProvider } from "@/contexts/ItemDetailsContext";
 import RightSideBarHost from "@/components/RightSideBarHost";
 import LayoutContentShift from "@/components/LayoutContentShift";
@@ -45,6 +46,7 @@ export default function RootLayout({
                     <SelectedGroupsProvider>
                       <SelectedAppsProvider>
                         <SelectedEntitlementsProvider>
+                          <SelectedLocationsProvider>
                           <ItemDetailsProvider>
                         <RightSidebarProvider>
                         <LeftSidebarProvider>
@@ -59,6 +61,7 @@ export default function RootLayout({
                         </LeftSidebarProvider>
                       </RightSidebarProvider>
                           </ItemDetailsProvider>
+                          </SelectedLocationsProvider>
                         </SelectedEntitlementsProvider>
                       </SelectedAppsProvider>
                     </SelectedGroupsProvider>

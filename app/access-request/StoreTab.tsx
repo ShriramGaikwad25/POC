@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 const AgGridReact = dynamic(() => import("ag-grid-react").then(mod => mod.AgGridReact), { ssr: false });
 import "@/lib/ag-grid-setup";
 import { ColDef } from "ag-grid-enterprise";
+import { useSelectedLocations, Location } from "@/contexts/SelectedLocationsContext";
 
 interface StoreRow {
   id: string;
@@ -17,6 +18,7 @@ interface StoreRow {
 }
 
 const StoreTab: React.FC = () => {
+  const { selectedLocations, addLocation, removeLocation } = useSelectedLocations();
   const [searchQuery, setSearchQuery] = useState("");
   const [rowData, setRowData] = useState<StoreRow[]>([]);
   const [selectedStores, setSelectedStores] = useState<Set<string>>(new Set());
@@ -153,6 +155,30 @@ const StoreTab: React.FC = () => {
     const selectedRows = event.api.getSelectedRows();
     const newSelectedIds = new Set(selectedRows.map((row: StoreRow) => row.id));
     setSelectedStores(newSelectedIds);
+
+    // Update context
+    const currentSelectedIds = new Set(selectedLocations.filter(l => l.type === 'store').map(l => l.id));
+    
+    // Add new selections
+    selectedRows.forEach((row: StoreRow) => {
+      if (!currentSelectedIds.has(row.id)) {
+        const location: Location = {
+          id: row.id,
+          name: row.storeName,
+          type: 'store',
+          storeNumber: row.storeNumber,
+          location: row.location,
+          brand: row.brand,
+          region: row.region,
+        };
+        addLocation(location);
+      }
+    });
+
+    // Remove unselected stores
+    selectedLocations
+      .filter(l => l.type === 'store' && !newSelectedIds.has(l.id))
+      .forEach(location => removeLocation(location.id));
   };
 
   return (
