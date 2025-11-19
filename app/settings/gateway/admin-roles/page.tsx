@@ -39,14 +39,58 @@ const ROLE_CATEGORIES: Record<CategoryTabKey, RoleInfo[]> = {
   corporate: CORPORATE_ROLES,
 };
 
+// Default privileges available in the system
+const DEFAULT_PRIVILEGES = [
+  "View Reports",
+  "Manage Users",
+  "Manage Stores",
+  "View Analytics",
+  "Manage Inventory",
+  "Manage Access Requests",
+  "Approve Access Requests",
+  "Manage Roles",
+  "View Audit Logs",
+  "Manage Settings",
+  "Export Data",
+  "Manage Permissions",
+  "View Dashboard",
+  "Manage Certifications",
+  "Manage Applications",
+  "Manage Entitlements",
+  "Manage Groups",
+  "View User Details",
+  "Manage Schedules",
+  "Manage Policies",
+];
+
+// Default privileges for each role
+const DEFAULT_ROLE_PRIVILEGES: Record<string, string[]> = {
+  // Regional Roles
+  "District Manager": ["View Reports", "Manage Stores", "View Analytics", "Manage Users", "View Dashboard", "Export Data"],
+  "Region Leaders": ["View Reports", "Manage Stores", "View Analytics", "Manage Users", "Manage Roles", "View Dashboard", "Export Data", "Manage Settings"],
+  "VPs": ["View Reports", "Manage Stores", "View Analytics", "Manage Users", "Manage Roles", "View Dashboard", "Export Data", "Manage Settings", "View Audit Logs", "Manage Policies"],
+  "Support Teams": ["View Reports", "View Analytics", "View Dashboard", "Manage Users", "View User Details"],
+  
+  // Store Roles
+  "Store manager": ["View Reports", "Manage Inventory", "Manage Schedules", "View Dashboard", "View User Details"],
+  "Bar manager": ["View Reports", "Manage Inventory", "Manage Schedules", "View Dashboard"],
+  "Assistant managers": ["View Reports", "View Dashboard", "Manage Schedules", "View User Details"],
+  "Shift leaders": ["View Dashboard", "View Reports", "View User Details"],
+  
+  // Corporate Roles
+  "Franchise Admin": ["Manage Users", "Manage Stores", "View Reports", "Manage Access Requests", "Approve Access Requests", "View Dashboard", "Export Data"],
+  "Technology manager": ["Manage Settings", "Manage Applications", "View Audit Logs", "Manage Permissions", "View Dashboard", "Export Data"],
+  "customer service manager": ["View User Details", "View Reports", "Manage Access Requests", "View Dashboard", "Manage Certifications"],
+};
+
 export default function GatewayAdminRolesSettings() {
   const [activeCategoryTab, setActiveCategoryTab] = useState<CategoryTabKey>("regional");
   const [activeRoleIdx, setActiveRoleIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<TabKey>("users");
   const roles = ROLE_CATEGORIES[activeCategoryTab];
   const role = roles[activeRoleIdx];
-  const [rolePrivileges, setRolePrivileges] = useState<Record<string, string[]>>({});
-  const [allPrivileges, setAllPrivileges] = useState<string[]>([]);
+  const [rolePrivileges, setRolePrivileges] = useState<Record<string, string[]>>(DEFAULT_ROLE_PRIVILEGES);
+  const [allPrivileges, setAllPrivileges] = useState<string[]>(DEFAULT_PRIVILEGES);
   const [selectedPrivilege, setSelectedPrivilege] = useState<string>("");
   const [privPage, setPrivPage] = useState(1);
   const privPageSize = 10;
@@ -63,15 +107,19 @@ export default function GatewayAdminRolesSettings() {
         const privRes = await fetch("https://preview.keyforge.ai/privilegedrole/api/v1/ACMECOM/roleprivilege", { signal: controller.signal });
         if (privRes.ok) {
           const privJson: { privileges?: Array<{ privilegeName: string }>; adminRolePrivileges?: Array<{ adminRole: string; privilegeSet: Array<{ privilegeName: string }> }> } = await privRes.json();
-          const map: Record<string, string[]> = {};
+          const map: Record<string, string[]> = { ...DEFAULT_ROLE_PRIVILEGES };
           (privJson.adminRolePrivileges || []).forEach(entry => {
             map[entry.adminRole] = entry.privilegeSet.map(p => p.privilegeName);
           });
           setRolePrivileges(map);
-          setAllPrivileges((privJson.privileges || []).map(p => p.privilegeName));
+          
+          // Merge API privileges with default privileges
+          const apiPrivileges = (privJson.privileges || []).map(p => p.privilegeName);
+          const mergedPrivileges = [...new Set([...DEFAULT_PRIVILEGES, ...apiPrivileges])];
+          setAllPrivileges(mergedPrivileges);
         }
       } catch (e) {
-        // keep fallback
+        // keep fallback - use default privileges
         console.error(e);
       }
     };

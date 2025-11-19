@@ -20,6 +20,7 @@ export default function Dashboard() {
       icon: Key,
       color: "green" as const,
       description: "Request access to applications and resources",
+      flipDescription: "Request access for franchise users and store users to applications and its associated roles/groups",
     },
     {
       title: "My Stores",
@@ -27,6 +28,7 @@ export default function Dashboard() {
       icon: Store,
       color: "purple" as const,
       description: "Manage your application stores and repositories",
+      flipDescription: "Review your allocated stores and create custom store groups",
     },
     {
       title: "My Users",
@@ -34,6 +36,7 @@ export default function Dashboard() {
       icon: Users,
       color: "indigo" as const,
       description: "View and manage user accounts",
+      flipDescription: "Review your users, their access and create custom user groups. Also request for new user creation",
     },
     {
       title: "Roles",
@@ -41,6 +44,7 @@ export default function Dashboard() {
       icon: Shield,
       color: "orange" as const,
       description: "Manage roles and permissions",
+      flipDescription: "Manage roles, role assignments and review role privileges and scope",
     },
   ];
 
@@ -61,6 +65,7 @@ export default function Dashboard() {
             href={card.href}
             icon={card.icon}
             description={card.description}
+            flipDescription={card.flipDescription}
             color={card.color}
           />
         ))}

@@ -9,6 +9,7 @@ interface DashboardCardProps {
   href: string;
   icon: LucideIcon;
   description: string;
+  flipDescription?: string;
   color?: "blue" | "green" | "purple" | "indigo" | "orange" | "gray";
 }
 
@@ -50,6 +51,7 @@ export default function DashboardCard({
   href,
   icon: Icon,
   description,
+  flipDescription,
   color = "blue",
 }: DashboardCardProps) {
   const colors = colorClasses[color];
@@ -71,11 +73,17 @@ export default function DashboardCard({
             </div>
           </div>
         </div>
-        <div className="card-back h-full flex items-center justify-center">
-          <div className="flex flex-col items-center justify-center text-center">
+        <div className="card-back h-full flex items-center justify-center p-6">
+          <div className="flex flex-col items-center justify-center text-center w-full">
             <Icon className={`w-12 h-12 ${colors.icon} mb-4`} />
-            <p className="text-sm text-gray-600 font-medium">Click to open</p>
-            <p className="text-xs text-gray-500 mt-2">{title}</p>
+            {flipDescription ? (
+              <p className="text-sm text-gray-700 leading-relaxed px-4">{flipDescription}</p>
+            ) : (
+              <>
+                <p className="text-sm text-gray-600 font-medium">Click to open</p>
+                <p className="text-xs text-gray-500 mt-2">{title}</p>
+              </>
+            )}
           </div>
         </div>
       </div>
