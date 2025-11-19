@@ -14,10 +14,10 @@ import { useSelectedApps } from "@/contexts/SelectedAppsContext";
 import { useSelectedEntitlements } from "@/contexts/SelectedEntitlementsContext";
 
 const AccessRequest: React.FC = () => {
-  const { selectedUsers, removeUser } = useSelectedUsers();
-  const { selectedGroups, removeGroup } = useSelectedGroups();
-  const { selectedApps, removeApp } = useSelectedApps();
-  const { selectedEntitlements } = useSelectedEntitlements();
+  const { selectedUsers, removeUser, clearUsers } = useSelectedUsers();
+  const { selectedGroups, removeGroup, clearGroups } = useSelectedGroups();
+  const { selectedApps, removeApp, clearApps } = useSelectedApps();
+  const { selectedEntitlements, clearEntitlements } = useSelectedEntitlements();
   const [currentStep, setCurrentStep] = useState(1);
   const [activeTab, setActiveTab] = useState(0);
   const [activeLocationTab, setActiveLocationTab] = useState(0);
@@ -120,7 +120,17 @@ const AccessRequest: React.FC = () => {
                 onClick={() => {
                   // Handle submit logic here
                   console.log("Submitting access request...");
-                  alert("Access request submitted successfully!");
+                  
+                  // Clear all selections
+                  clearUsers();
+                  clearGroups();
+                  clearApps();
+                  clearEntitlements();
+                  
+                  // Reset to step 1
+                  setCurrentStep(1);
+                  setActiveTab(0);
+                  setActiveLocationTab(0);
                 }}
                 disabled={selectedEntitlements.length === 0}
                 className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${

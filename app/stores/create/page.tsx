@@ -1,15 +1,36 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Check, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Upload, Search } from "lucide-react";
 import { executeQuery } from "@/lib/api";
-import { useForm, Control, FieldValues, UseFormSetValue, UseFormWatch } from "react-hook-form";
-import ExpressionBuilder from "@/components/ExpressionBuilder";
+import dynamic from "next/dynamic";
+const AgGridReact = dynamic(() => import("ag-grid-react").then(mod => mod.AgGridReact), { ssr: false });
+import "@/lib/ag-grid-setup";
+import { ColDef } from "ag-grid-enterprise";
 
 interface User {
+  id: string;
   name: string;
   email: string;
+  title?: string;
+  department?: string;
+  empId?: string;
+  manager?: string;
+  storeLocation?: string;
+  brand?: string;
+  startDate?: string;
+}
+
+interface UserRow {
+  id: string;
+  displayName: string;
+  email: string;
+  empId: string;
+  manager: string;
+  storeLocation: string;
+  brand: string;
+  startDate: string;
   title?: string;
   department?: string;
 }
@@ -40,6 +61,11 @@ export default function CreateStorePage() {
   ]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [rowData, setRowData] = useState<UserRow[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [gridApi, setGridApi] = useState<any>(null);
+  const [isUpdatingSelection, setIsUpdatingSelection] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     step1: {
       groupName: "",
@@ -95,12 +121,14 @@ export default function CreateStorePage() {
         if (userList.length === 0) {
           userList = [
             {
+              id: "1",
               name: "Aamod Radwan",
               email: "aamod.radwan@zillasecurity.io",
               title: "Staff",
               department: "Sales",
             },
             {
+              id: "2",
               name: "Abdulah Thibadeau",
               email: "abdulah.thibadeau@zillasecurity.io",
               title: "Manager - IT & Security",
@@ -109,24 +137,65 @@ export default function CreateStorePage() {
           ];
         }
         
+        // Add IDs to users if they don't have them
+        userList = userList.map((user, index) => ({
+          ...user,
+          id: user.id || `user-${index}`,
+        }));
+        
         setUsers(userList);
+        
+        // Convert to UserRow format for the table
+        const rows: UserRow[] = userList.map((user, index) => ({
+          id: user.id || `user-${index}`,
+          displayName: user.name,
+          email: user.email,
+          empId: user.empId || `EMP${String(index + 1).padStart(3, "0")}`,
+          manager: user.manager || "Manager Name",
+          storeLocation: user.storeLocation || "Store Location",
+          brand: user.brand || user.department || "Brand",
+          startDate: user.startDate || new Date().toISOString().split("T")[0],
+          title: user.title,
+          department: user.department,
+        }));
+        
+        setRowData(rows);
       } catch (err) {
         console.error("Error fetching users:", err);
         // Fallback to default users on error
-        setUsers([
+        const fallbackUsers: User[] = [
           {
+            id: "1",
             name: "Aamod Radwan",
             email: "aamod.radwan@zillasecurity.io",
             title: "Staff",
             department: "Sales",
           },
           {
+            id: "2",
             name: "Abdulah Thibadeau",
             email: "abdulah.thibadeau@zillasecurity.io",
             title: "Manager - IT & Security",
             department: "IT & Security",
           },
-        ]);
+        ];
+        setUsers(fallbackUsers);
+        
+        // Convert to UserRow format for the table
+        const rows: UserRow[] = fallbackUsers.map((user, index) => ({
+          id: user.id || `user-${index}`,
+          displayName: user.name,
+          email: user.email,
+          empId: user.empId || `EMP${String(index + 1).padStart(3, "0")}`,
+          manager: user.manager || "Manager Name",
+          storeLocation: user.storeLocation || "Store Location",
+          brand: user.brand || user.department || "Brand",
+          startDate: user.startDate || new Date().toISOString().split("T")[0],
+          title: user.title,
+          department: user.department,
+        }));
+        
+        setRowData(rows);
       } finally {
         setLoading(false);
       }
@@ -148,67 +217,140 @@ export default function CreateStorePage() {
     });
   }, [formData.step1]);
 
-  // React Hook Form for Step 2
-  const step2Form = useForm<FieldValues>({
-    mode: "onChange",
-    defaultValues: {
-      specificUserExpression: formData.step2.specificUserExpression || [],
-    },
-  });
-
-  const {
-    control: step2Control,
-    setValue: setStep2Value,
-    watch: watchStep2,
-    formState: { isValid: isStep2Valid },
-  } = step2Form;
-
-  // Initialize form when selection method changes to "specific" - only once
-  useEffect(() => {
-    if (formData.step2.selectionMethod === "specific" && formData.step2.specificUserExpression.length === 0) {
-      setStep2Value("specificUserExpression", [], { shouldValidate: false });
+  // Filter data based on search query
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim() || !hasSearched) {
+      return [];
     }
-  }, [formData.step2.selectionMethod, setStep2Value]);
+    const query = searchQuery.toLowerCase();
+    return rowData.filter((user) =>
+      user.displayName.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query) ||
+      user.empId.toLowerCase().includes(query) ||
+      user.manager.toLowerCase().includes(query) ||
+      user.storeLocation.toLowerCase().includes(query) ||
+      user.brand.toLowerCase().includes(query)
+    );
+  }, [rowData, searchQuery, hasSearched]);
 
-  // Watch step2 form values - sync from form to formData
-  useEffect(() => {
-    if (formData.step2.selectionMethod !== "specific") {
+  // Format date
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  };
+
+  const columnDefs = useMemo<ColDef[]>(
+    () => [
+      {
+        headerName: "",
+        field: "select",
+        width: 50,
+        checkboxSelection: true,
+        headerCheckboxSelection: false,
+        pinned: "left",
+        filter: false,
+        sortable: false,
+      },
+      {
+        headerName: "Display Name",
+        field: "displayName",
+        flex: 1,
+        minWidth: 150,
+      },
+      {
+        headerName: "Email",
+        field: "email",
+        flex: 1,
+        minWidth: 200,
+      },
+      {
+        headerName: "Emp ID",
+        field: "empId",
+        flex: 1,
+        minWidth: 100,
+      },
+      {
+        headerName: "Manager",
+        field: "manager",
+        flex: 1,
+        minWidth: 150,
+      },
+      {
+        headerName: "Store Location",
+        field: "storeLocation",
+        flex: 1,
+        minWidth: 180,
+      },
+      {
+        headerName: "Brand",
+        field: "brand",
+        flex: 1,
+        minWidth: 120,
+      },
+      {
+        headerName: "Start Date",
+        field: "startDate",
+        flex: 1,
+        minWidth: 120,
+        valueFormatter: (params: any) => formatDate(params.value),
+      },
+    ],
+    []
+  );
+
+  const onSelectionChanged = (event: any) => {
+    if (isUpdatingSelection) {
       return;
     }
     
-    const subscription = watchStep2((values) => {
-      const newExpression = values.specificUserExpression || [];
-      setFormData((prev) => {
-        // Only update if the expression actually changed and selection method is still "specific"
-        if (prev.step2.selectionMethod !== "specific") {
-          return prev;
-        }
-        const currentExpression = prev.step2.specificUserExpression || [];
-        if (JSON.stringify(newExpression) !== JSON.stringify(currentExpression)) {
-          return {
-            ...prev,
-            step2: {
-              ...prev.step2,
-              specificUserExpression: newExpression,
-            },
-          };
-        }
-        return prev;
-      });
+    const selectedRows = event.api.getSelectedRows();
+    const selectedUserId = selectedRows.length > 0 ? [selectedRows[0].id] : [];
+    
+    setFormData((prev) => {
+      if (JSON.stringify(prev.step2.selectedUsers.sort()) !== JSON.stringify(selectedUserId.sort())) {
+        return {
+          ...prev,
+          step2: {
+            ...prev.step2,
+            selectedUsers: selectedUserId,
+          },
+        };
+      }
+      return prev;
     });
-    return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.step2.selectionMethod]);
+  };
+
+  const onGridReady = (params: any) => {
+    setGridApi(params.api);
+  };
+
+  // Sync selected rows when formData changes
+  useEffect(() => {
+    if (gridApi && formData.step2.selectionMethod === "specific" && !isUpdatingSelection) {
+      const selectedRowNodes = gridApi.getSelectedRows();
+      const currentSelectedIds = selectedRowNodes.map((row: UserRow) => row.id);
+      const formSelectedIds = formData.step2.selectedUsers;
+      
+      if (JSON.stringify(currentSelectedIds.sort()) !== JSON.stringify(formSelectedIds.sort())) {
+        setIsUpdatingSelection(true);
+        gridApi.deselectAll();
+        formSelectedIds.forEach((userId) => {
+          const rowNode = gridApi.getRowNode(userId);
+          if (rowNode) {
+            rowNode.setSelected(true);
+          }
+        });
+        setTimeout(() => setIsUpdatingSelection(false), 0);
+      }
+    }
+  }, [gridApi, formData.step2.selectionMethod]);
 
   // Validate Step 2
   useEffect(() => {
     let isValid = false;
     if (formData.step2.selectionMethod === "specific") {
-      isValid = Array.isArray(formData.step2.specificUserExpression) && 
-                formData.step2.specificUserExpression.length > 0 &&
-                formData.step2.specificUserExpression.every(
-                  (expr: any) => expr.attribute && expr.operator && expr.value
-                );
+      isValid = formData.step2.selectedUsers.length > 0;
     } else if (formData.step2.selectionMethod === "selectEach") {
       isValid = formData.step2.selectedUsers.length > 0;
     } else if (formData.step2.selectionMethod === "upload") {
@@ -489,15 +631,20 @@ export default function CreateStorePage() {
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
                       setFormData((prev) => ({
                         ...prev,
                         step2: {
                           ...prev.step2,
                           selectionMethod: option.value as "specific" | "selectEach" | "upload",
                         },
-                      }))
-                    }
+                      }));
+                      // Reset search state when switching methods
+                      if (option.value === "specific") {
+                        setHasSearched(false);
+                        setSearchQuery("");
+                      }
+                    }}
                     className={`px-4 py-2 min-w-16 rounded-md border border-gray-300 ${
                       formData.step2.selectionMethod === option.value
                         ? "bg-blue-600 text-white"
@@ -517,13 +664,76 @@ export default function CreateStorePage() {
             {/* Option 1 - Specific Users */}
             {formData.step2.selectionMethod === "specific" && (
               <div>
-                <ExpressionBuilder
-                  title="Build Expression"
-                  control={step2Control as Control<FieldValues>}
-                  setValue={setStep2Value as UseFormSetValue<FieldValues>}
-                  watch={watchStep2 as UseFormWatch<FieldValues>}
-                  fieldName="specificUserExpression"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Search and Select Users <span className="text-red-500">*</span>
+                </label>
+
+                {/* Search Bar */}
+                <div className="mb-4">
+                  <div className="flex gap-2 max-w-md">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        placeholder="Search by Display Name, Email, Emp ID, Manager, Store Location, or Brand..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            setHasSearched(true);
+                          }
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none pr-10"
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <Search className="h-5 w-5 text-gray-400" />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setHasSearched(true)}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                    >
+                      Search
+                    </button>
+                  </div>
+                  {hasSearched && searchQuery && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      Showing {filteredData.length} of {rowData.length} users
+                    </p>
+                  )}
+                </div>
+
+                {/* Table - Only show after search */}
+                {hasSearched && (
+                  <>
+                    <div className="ag-theme-alpine" style={{ height: 500, width: "100%" }}>
+                      <AgGridReact
+                        rowData={filteredData}
+                        columnDefs={columnDefs}
+                        rowSelection="single"
+                        onSelectionChanged={onSelectionChanged}
+                        onGridReady={onGridReady}
+                        suppressRowClickSelection={false}
+                        defaultColDef={{
+                          sortable: true,
+                          filter: true,
+                          resizable: true,
+                        }}
+                        domLayout="normal"
+                        rowHeight={50}
+                        headerHeight={40}
+                        isRowSelectable={(params: any) => true}
+                        getRowId={(params: any) => params.data.id}
+                      />
+                    </div>
+
+                    {formData.step2.selectedUsers.length > 0 && (
+                      <p className="text-sm text-gray-600 mt-2">
+                        1 user selected
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
             )}
 
@@ -672,28 +882,24 @@ export default function CreateStorePage() {
                 <div className="ml-2 mt-1">
                   {formData.step2.selectionMethod === "specific" && (
                     <div className="text-gray-900">
-                      {formData.step2.specificUserExpression && formData.step2.specificUserExpression.length > 0 ? (
+                      {formData.step2.selectedUsers.length > 0 ? (
                         <div>
                           <p className="text-sm mb-2">
-                            {formData.step2.specificUserExpression.length} condition(s) defined
+                            1 user selected
                           </p>
-                          <div className="bg-gray-100 p-3 rounded text-sm">
-                            <pre className="whitespace-pre-wrap">
-                              {JSON.stringify(
-                                formData.step2.specificUserExpression.map((expr: any) => ({
-                                  attribute: expr.attribute?.label || expr.attribute?.value || "",
-                                  operator: expr.operator?.label || expr.operator?.value || "",
-                                  value: expr.value || "",
-                                  logicalOp: expr.logicalOp || "",
-                                })),
-                                null,
-                                2
-                              )}
-                            </pre>
-                          </div>
+                          <ul className="list-disc list-inside mt-1 text-sm">
+                            {formData.step2.selectedUsers.map((userId) => {
+                              const user = rowData.find((u) => u.id === userId);
+                              return (
+                                <li key={userId}>
+                                  {user?.displayName || userId} ({user?.email || ""})
+                                </li>
+                              );
+                            })}
+                          </ul>
                         </div>
                       ) : (
-                        <span className="text-gray-500">No conditions defined</span>
+                        <span className="text-gray-500">No user selected</span>
                       )}
                     </div>
                   )}
