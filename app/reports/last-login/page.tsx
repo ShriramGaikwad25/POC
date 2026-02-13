@@ -1,0 +1,131 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+import { formatReportTimestamp } from "@/utils/utils";
+
+type LastLoginRow = {
+  DISPLAY_NAME: string;
+  USER_LOGIN: string;
+  TARGET_SYSTEM_NAME: string;
+  TARGET_USERNAME: string;
+  LAST_LOGIN_TS_UTC: string;
+};
+
+const LAST_LOGIN_DATA: LastLoginRow[] = [
+  { DISPLAY_NAME: "Jacqueline Adams", USER_LOGIN: "4562315511", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10002536", LAST_LOGIN_TS_UTC: "12-FEB-26 02.15.18.757000000 AM UTC" },
+  { DISPLAY_NAME: "Robert H Houlihan", USER_LOGIN: "4524736492", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10012727", LAST_LOGIN_TS_UTC: "12-FEB-26 01.40.20.667000000 AM UTC" },
+  { DISPLAY_NAME: "Kelly, John", USER_LOGIN: "JKelly@umassp.edu", TARGET_SYSTEM_NAME: "OCI-POC", TARGET_USERNAME: "JKelly@umassp.edu", LAST_LOGIN_TS_UTC: "12-FEB-26 12.32.15.994000000 AM UTC" },
+  { DISPLAY_NAME: "Chiti, Navatha", USER_LOGIN: "NChiti@umassp.edu", TARGET_SYSTEM_NAME: "OCI-POC", TARGET_USERNAME: "NChiti@umassp.edu", LAST_LOGIN_TS_UTC: "12-FEB-26 12.24.55.211000000 AM UTC" },
+  { DISPLAY_NAME: "Adam Keyes", USER_LOGIN: "9124607201", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10297363", LAST_LOGIN_TS_UTC: "11-FEB-26 10.43.53.094000000 PM UTC" },
+  { DISPLAY_NAME: "Lindsey A Litwak", USER_LOGIN: "7805674407", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10297106", LAST_LOGIN_TS_UTC: "11-FEB-26 10.02.33.620000000 PM UTC" },
+  { DISPLAY_NAME: "Deborah M Gould", USER_LOGIN: "6736408326", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10001169", LAST_LOGIN_TS_UTC: "11-FEB-26 10.01.12.594000000 PM UTC" },
+  { DISPLAY_NAME: "Terrie A Lamarche", USER_LOGIN: "0720911021", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10114533", LAST_LOGIN_TS_UTC: "11-FEB-26 09.37.07.685000000 PM UTC" },
+  { DISPLAY_NAME: "Lucas Iain", USER_LOGIN: "6557767391", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10111520", LAST_LOGIN_TS_UTC: "11-FEB-26 08.53.33.051000000 PM UTC" },
+  { DISPLAY_NAME: "Mindy M Donovan", USER_LOGIN: "5670191173", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10140119", LAST_LOGIN_TS_UTC: "11-FEB-26 08.52.22.348000000 PM UTC" },
+  { DISPLAY_NAME: "Holly Wang", USER_LOGIN: "hwang", TARGET_SYSTEM_NAME: "OCI-POC", TARGET_USERNAME: "hwang", LAST_LOGIN_TS_UTC: "11-FEB-26 08.34.30.640000000 PM UTC" },
+  { DISPLAY_NAME: "Linda G Harrington", USER_LOGIN: "8378847239", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10083021", LAST_LOGIN_TS_UTC: "11-FEB-26 08.32.17.938000000 PM UTC" },
+  { DISPLAY_NAME: "Margaret E Curtiss", USER_LOGIN: "4789826196", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10054252", LAST_LOGIN_TS_UTC: "11-FEB-26 08.31.30.679000000 PM UTC" },
+  { DISPLAY_NAME: "John R Brown", USER_LOGIN: "5970505041", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10166930", LAST_LOGIN_TS_UTC: "11-FEB-26 08.21.51.782000000 PM UTC" },
+  { DISPLAY_NAME: "Melissa Lawrence Zawadzki", USER_LOGIN: "6819698322", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10269513", LAST_LOGIN_TS_UTC: "11-FEB-26 08.14.22.923000000 PM UTC" },
+  { DISPLAY_NAME: "Aaron C Tauscher", USER_LOGIN: "7957970873", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10179170", LAST_LOGIN_TS_UTC: "11-FEB-26 08.10.36.138000000 PM UTC" },
+  { DISPLAY_NAME: "Michael Dolan Schwendenmann", USER_LOGIN: "7833978363", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10212067", LAST_LOGIN_TS_UTC: "11-FEB-26 08.10.13.935000000 PM UTC" },
+  { DISPLAY_NAME: "Amy Lynn Stout", USER_LOGIN: "3985791260", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10008957", LAST_LOGIN_TS_UTC: "11-FEB-26 08.08.48.966000000 PM UTC" },
+  { DISPLAY_NAME: "Emily Palmer", USER_LOGIN: "9305226768", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10289287", LAST_LOGIN_TS_UTC: "11-FEB-26 08.08.34.322000000 PM UTC" },
+  { DISPLAY_NAME: "Thomas R Szumita", USER_LOGIN: "6162239904", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10025950", LAST_LOGIN_TS_UTC: "11-FEB-26 08.06.46.155000000 PM UTC" },
+  { DISPLAY_NAME: "Heather J Lacey", USER_LOGIN: "1261666533", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10212344", LAST_LOGIN_TS_UTC: "11-FEB-26 08.06.07.526000000 PM UTC" },
+  { DISPLAY_NAME: "Jody J Mancini", USER_LOGIN: "2742049026", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10224770", LAST_LOGIN_TS_UTC: "11-FEB-26 07.48.06.987000000 PM UTC" },
+  { DISPLAY_NAME: "Machelle Carter", USER_LOGIN: "9131581808", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10210214", LAST_LOGIN_TS_UTC: "11-FEB-26 07.36.35.786000000 PM UTC" },
+  { DISPLAY_NAME: "James Barbieri", USER_LOGIN: "jbarbieri@umassp.edu", TARGET_SYSTEM_NAME: "OCI-POC", TARGET_USERNAME: "jbarbieri@umassp.edu", LAST_LOGIN_TS_UTC: "11-FEB-26 07.00.52.892000000 PM UTC" },
+  { DISPLAY_NAME: "James Barbieri", USER_LOGIN: "jbarbieri@umassp.edu", TARGET_SYSTEM_NAME: "OCI-POC", TARGET_USERNAME: "JBarbieri@umassp.edu", LAST_LOGIN_TS_UTC: "11-FEB-26 06.59.59.017000000 PM UTC" },
+  { DISPLAY_NAME: "Edward C. Keefe", USER_LOGIN: "4766308747", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10099528", LAST_LOGIN_TS_UTC: "11-FEB-26 06.25.21.196000000 PM UTC" },
+  { DISPLAY_NAME: "Nancy Gail Ritchie", USER_LOGIN: "9181992879", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10036684", LAST_LOGIN_TS_UTC: "11-FEB-26 06.18.30.094000000 PM UTC" },
+  { DISPLAY_NAME: "Colleen E Venditti", USER_LOGIN: "9317098040", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10003308", LAST_LOGIN_TS_UTC: "11-FEB-26 06.11.07.591000000 PM UTC" },
+  { DISPLAY_NAME: "Lisa A Wegiel", USER_LOGIN: "6206791503", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10011182", LAST_LOGIN_TS_UTC: "11-FEB-26 05.20.21.266000000 PM UTC" },
+  { DISPLAY_NAME: "Chiti, Navatha", USER_LOGIN: "NChiti@umassp.edu", TARGET_SYSTEM_NAME: "OCI-POC", TARGET_USERNAME: "nchiti@umassp.edu", LAST_LOGIN_TS_UTC: "11-FEB-26 04.29.30.845000000 PM UTC" },
+  { DISPLAY_NAME: "John A Barrett", USER_LOGIN: "1376220330", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10301742", LAST_LOGIN_TS_UTC: "11-FEB-26 04.09.06.450000000 PM UTC" },
+  { DISPLAY_NAME: "Kathleen Maher", USER_LOGIN: "4062066433", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10156691", LAST_LOGIN_TS_UTC: "11-FEB-26 03.45.01.336000000 PM UTC" },
+  { DISPLAY_NAME: "Marcy L Kelley", USER_LOGIN: "8007841652", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10119220", LAST_LOGIN_TS_UTC: "11-FEB-26 03.14.30.332000000 PM UTC" },
+  { DISPLAY_NAME: "Aaron Mark Snow", USER_LOGIN: "3058356050", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10008330", LAST_LOGIN_TS_UTC: "11-FEB-26 02.58.42.787000000 PM UTC" },
+  { DISPLAY_NAME: "Angela R. McCall", USER_LOGIN: "7589983851", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10046384", LAST_LOGIN_TS_UTC: "11-FEB-26 02.50.11.061000000 PM UTC" },
+  { DISPLAY_NAME: "Amy Lynn Stout", USER_LOGIN: "3985791260", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10008957", LAST_LOGIN_TS_UTC: "11-FEB-26 02.49.00.907000000 PM UTC" },
+  { DISPLAY_NAME: "Machelle Carter", USER_LOGIN: "9131581808", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10210214", LAST_LOGIN_TS_UTC: "11-FEB-26 02.47.22.459000000 PM UTC" },
+  { DISPLAY_NAME: "Mindy M Donovan", USER_LOGIN: "5670191173", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10140119", LAST_LOGIN_TS_UTC: "11-FEB-26 02.32.16.572000000 PM UTC" },
+  { DISPLAY_NAME: "Adam Keyes", USER_LOGIN: "9124607201", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10297363", LAST_LOGIN_TS_UTC: "11-FEB-26 02.32.12.691000000 PM UTC" },
+  { DISPLAY_NAME: "William H Pete", USER_LOGIN: "9191127829", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10195294", LAST_LOGIN_TS_UTC: "11-FEB-26 02.18.40.272000000 PM UTC" },
+  { DISPLAY_NAME: "John R Brown", USER_LOGIN: "5970505041", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10166930", LAST_LOGIN_TS_UTC: "11-FEB-26 02.05.23.525000000 PM UTC" },
+  { DISPLAY_NAME: "Cynthia Kinahan", USER_LOGIN: "5558431854", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10004464", LAST_LOGIN_TS_UTC: "11-FEB-26 12.49.46.139000000 PM UTC" },
+  { DISPLAY_NAME: "Marcy L Kelley", USER_LOGIN: "8007841652", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10119220", LAST_LOGIN_TS_UTC: "11-FEB-26 12.18.24.107000000 PM UTC" },
+  { DISPLAY_NAME: "Chiti, Navatha", USER_LOGIN: "NChiti@umassp.edu", TARGET_SYSTEM_NAME: "OCI-POC", TARGET_USERNAME: "NChiti@umassp.edu", LAST_LOGIN_TS_UTC: "11-FEB-26 04.57.14.358000000 AM UTC" },
+  { DISPLAY_NAME: "Nancy Gail Ritchie", USER_LOGIN: "9181992879", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10036684", LAST_LOGIN_TS_UTC: "11-FEB-26 03.20.31.620000000 AM UTC" },
+  { DISPLAY_NAME: "Terrie A Lamarche", USER_LOGIN: "0720911021", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10114533", LAST_LOGIN_TS_UTC: "11-FEB-26 02.49.59.297000000 AM UTC" },
+  { DISPLAY_NAME: "Janice A Cole", USER_LOGIN: "8070074817", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10160891", LAST_LOGIN_TS_UTC: "11-FEB-26 12.08.27.545000000 AM UTC" },
+  { DISPLAY_NAME: "Parikshit Dumbhare", USER_LOGIN: "pdumbhare", TARGET_SYSTEM_NAME: "OCI-POC", TARGET_USERNAME: "pdumbhare", LAST_LOGIN_TS_UTC: "10-FEB-26 11.29.00.188000000 PM UTC" },
+  { DISPLAY_NAME: "Kelly, John", USER_LOGIN: "JKelly@umassp.edu", TARGET_SYSTEM_NAME: "OCI-POC", TARGET_USERNAME: "jkelly@umassp.edu", LAST_LOGIN_TS_UTC: "10-FEB-26 10.42.07.573000000 PM UTC" },
+  { DISPLAY_NAME: "Sue E Lorow", USER_LOGIN: "2184586354", TARGET_SYSTEM_NAME: "EPMDEV", TARGET_USERNAME: "10019374", LAST_LOGIN_TS_UTC: "10-FEB-26 09.53.05.564000000 PM UTC" },
+];
+
+const COLUMNS: { key: keyof LastLoginRow; label: string }[] = [
+  { key: "DISPLAY_NAME", label: "Display Name" },
+  { key: "USER_LOGIN", label: "User Login" },
+  { key: "TARGET_SYSTEM_NAME", label: "Target System" },
+  { key: "TARGET_USERNAME", label: "Target Username" },
+  { key: "LAST_LOGIN_TS_UTC", label: "Last Login (UTC)" },
+];
+
+export default function LastLoginReportPage() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full py-6 px-4 md:px-6 max-w-[1600px] mx-auto">
+        <Link
+          href="/reports"
+          className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-6"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to Reports
+        </Link>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-4 md:px-6 py-4 border-b border-gray-200 bg-gray-50/50">
+            <h1 className="text-xl font-semibold text-blue-700">Last Login Report</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Last login activity by user and target system
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  {COLUMNS.map(({ key, label }) => (
+                    <th
+                      key={key}
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-normal break-words align-top"
+                    >
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {LAST_LOGIN_DATA.map((row, i) => (
+                  <tr key={i} className="border-b border-gray-100 hover:bg-gray-50/50">
+                    {COLUMNS.map(({ key }) => (
+                      <td
+                        key={key}
+                        className="px-4 py-3 text-gray-800 whitespace-normal break-words align-top"
+                      >
+                        {key === "LAST_LOGIN_TS_UTC" ? formatReportTimestamp(row[key]) || "—" : (row[key] ?? "—")}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

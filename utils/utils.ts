@@ -1,4 +1,13 @@
-import { v4 as uuidv4 } from "uuid";  
+import { v4 as uuidv4 } from "uuid";
+
+/** Shorten report timestamp e.g. "12-FEB-26 06.37.31.690540060 AM GMT" -> "12-FEB-26 06.37 AM GMT" (also supports UTC) */
+export function formatReportTimestamp(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const s = String(value).trim();
+  const m = s.match(/^(\d{2}-[A-Z]{3}-\d{2} \d{2}\.\d{2})\.\d{2}\.\d+\s+(AM|PM)\s+(GMT|UTC)$/i);
+  return m ? `${m[1]} ${m[2]} ${m[3].toUpperCase()}` : s;
+}
+
 export const exportToCSV = (gridApi: any) => {
   if (!gridApi) return;
 

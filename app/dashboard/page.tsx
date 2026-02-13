@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { User, Key, Store, Users, Shield } from "lucide-react";
+import { User, Key, Store, Users, Shield, FileText } from "lucide-react";
 import DashboardCard from "@/components/DashboardCard";
 import "../dashboard.css";
 
@@ -45,6 +45,14 @@ export default function Dashboard() {
       color: "orange" as const,
       description: "Manage roles and permissions",
       flipDescription: "Manage roles, role assignments and review role privileges and scope",
+    },
+    {
+      title: "Reports",
+      href: "/reports",
+      icon: FileText,
+      color: "gray" as const,
+      description: "View access requests and reports",
+      flipDescription: "Access Requests, Last Login, Deleted Target Identity, User Permission, and Orphan Account reports",
     },
   ];
 
