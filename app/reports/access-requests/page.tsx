@@ -108,13 +108,13 @@ export default function AccessRequestsPage() {
           )}
 
           {error && !loading && (
-            <div className="flex flex-col gap-2 px-6 py-4 bg-amber-50 text-amber-900 border-t border-amber-200">
+            <div className="flex flex-col gap-2 px-6 py-4 bg-blue-50 text-blue-900 border-t border-blue-200">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <span>{error}</span>
+                <span>Access requests are not configured.</span>
               </div>
-              <p className="text-sm text-amber-800">
-                On Vercel: Project → Settings → Environment Variables → add <code className="bg-amber-100 px-1 rounded">AG_ACCESS_REQUESTS_BEARER_TOKEN</code> with your Access Governance bearer token, then redeploy.
+              <p className="text-sm text-blue-800">
+                Add <code className="bg-blue-100 px-1 rounded font-mono text-xs">AG_ACCESS_REQUESTS_BEARER_TOKEN</code> in your environment with your Access Governance bearer token. On Vercel: Project → Settings → Environment Variables, add the variable, then redeploy.
               </p>
             </div>
           )}
