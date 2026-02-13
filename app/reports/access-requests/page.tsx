@@ -114,7 +114,7 @@ export default function AccessRequestsPage() {
                 <span>Access requests are not configured.</span>
               </div>
               <p className="text-sm text-blue-800">
-                Add <code className="bg-blue-100 px-1 rounded font-mono text-xs">AG_ACCESS_REQUESTS_BEARER_TOKEN</code> in your environment with your Access Governance bearer token. On Vercel: Project → Settings → Environment Variables, add the variable, then redeploy.
+                Set <code className="bg-blue-100 px-1 rounded font-mono text-xs">AG_ACCESS_REQUESTS_BEARER_TOKEN</code> to your <code className="bg-blue-100 px-1 rounded font-mono text-xs">accessToken</code> JWT, or the full cookie string (e.g. <code className="bg-blue-100 px-1 rounded font-mono text-xs">accessToken=eyJ...; uidTenant=...; ...</code>). On Vercel: Project → Settings → Environment Variables, add the variable, then redeploy.
               </p>
             </div>
           )}

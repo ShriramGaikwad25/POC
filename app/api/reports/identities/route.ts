@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { getAGBearerToken } from "@/utils/agToken";
 
 const URL =
   "https://ag-poc-idoc2ay9p1ie.access-governance.us-ashburn-1.oci.oraclecloud.com/access-governance/identities/20250331/identities";
 
 export async function GET() {
   try {
-    const token = process.env.AG_ACCESS_REQUESTS_BEARER_TOKEN;
+    const token = getAGBearerToken();
     if (!token) {
       return NextResponse.json(
         { error: "Server configuration error", message: "AG_ACCESS_REQUESTS_BEARER_TOKEN is not set" },

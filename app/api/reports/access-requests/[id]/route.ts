@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAGBearerToken } from "@/utils/agToken";
 
 const BASE_URL =
   "https://ag-poc-idoc2ay9p1ie.access-governance.us-ashburn-1.oci.oraclecloud.com/access-governance/access-controls/20250331/accessRequests";
@@ -16,7 +17,7 @@ export async function GET(
       );
     }
 
-    const token = process.env.AG_ACCESS_REQUESTS_BEARER_TOKEN;
+    const token = getAGBearerToken();
     if (!token) {
       return NextResponse.json(
         {
